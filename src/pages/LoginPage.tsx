@@ -7,10 +7,12 @@ import { z } from 'zod';
 const loginSchema = z.object({
   email: z.string().email('Email không đúng định dạng'),
   password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
-  role: z.enum(['HOST', 'ADMIN'])
+  role: z.string().min(1)
 });
 
 type Role = 'HOST' | 'ADMIN';
+
+import { authApi } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
+  const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -38,6 +41,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setGeneralError('');
+    setSuccess('');
     setFormErrors({});
 
     const validationResult = loginSchema.safeParse(formData);
@@ -58,19 +62,45 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const res = await authApi.login(formData);
+      const res = await authApi.login(formData);
       
-      // Simulated API call for UI testing layout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate success
-      console.log('Login attempt with:', formData);
-      navigate('/');
+      // The backend returns a structure like: { status, message, data: { accessToken, refreshToken, user } }
+      if (res.status === 200) {
+        const { accessToken, refreshToken, user } = res.data;
+        
+        // Store auth data
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        console.log('Login successful:', res.message);
+        setSuccess(res.message || 'Đăng nhập thành công! Đang chuyển hướng...');
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      } else {
+        setGeneralError(res.message || 'Đăng nhập thất bại.');
+      }
       
     } catch (err: any) {
-      console.error("API Error:", err);
-      setGeneralError('Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.');
+      console.error("API Error detailed:", err);
+      
+      // authApi.login throws error.response.data if it exists
+      // If it doesn't, it throws the original error object
+      let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
+      
+      if (err.message && !err.message.includes('status code')) {
+        // This is likely the backend message if it's already extracted or a custom error
+        errorMessage = err.message;
+      } else if (err.response?.data?.message) {
+        // Fallback to searching in axios error structure
+        errorMessage = err.response.data.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setGeneralError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -107,6 +137,17 @@ export default function LoginPage() {
           <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
             <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <span className="leading-relaxed">{generalError}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 text-green-700 text-sm rounded-xl border border-green-100 flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
+             <div className="w-5 h-5 mt-0.5 flex-shrink-0 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+             </div>
+            <span className="leading-relaxed">{success}</span>
           </div>
         )}
 

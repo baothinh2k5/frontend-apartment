@@ -1,22 +1,38 @@
-import axios from 'axios';
+import axiosClient from './axiosClient';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+interface ApiResponse<T = any> {
+  status: number;
+  message: string;
+  data: T;
+}
+
+const AUTH_ENDPOINTS = {
+  login: '/users/login',
+  register: '/users/register',
+} as const;
 
 export const authApi = {
-  registerHost: async (userData: any) => {
+  login: async (credentials: any): Promise<ApiResponse> => {
     try {
-      const response = await api.post('/users/register', userData);
-      return response.data;
+      const response = await axiosClient.post(AUTH_ENDPOINTS.login, credentials);
+      return response as unknown as ApiResponse;
     } catch (error: any) {
-      if (error.response) {
+      if (error.response?.data) {
         throw error.response.data;
       }
-      throw new Error('Network error. Please try again later.');
+      throw error;
+    }
+  },
+
+  registerHost: async (userData: any): Promise<ApiResponse> => {
+    try {
+      const response = await axiosClient.post(AUTH_ENDPOINTS.register, userData);
+      return response as unknown as ApiResponse;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      throw error;
     }
   },
 };
