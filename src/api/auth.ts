@@ -1,22 +1,58 @@
-import axios from 'axios';
+import axiosClient from './axiosClient';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+interface ApiResponse<T = any> {
+  status: number;
+  message: string;
+  data: T;
+}
+
+interface ForgotPasswordPayload {
+  email: string;
+}
+
+interface VerifyResetCodePayload {
+  email: string;
+  code: string;
+}
+
+interface ResetPasswordPayload {
+  email: string;
+  resetToken: string;
+  password: string;
+  confirmPassword: string;
+}
+
+const AUTH_ENDPOINTS = {
+  login: '/users/login',
+  register: '/users/register',
+  forgotPassword: '/users/forgot-password',
+  verifyResetCode: '/users/verify-reset-code',
+  resetPassword: '/users/reset-password',
+} as const;
+
+async function post<TPayload>(endpoint: string, payload: TPayload): Promise<ApiResponse> {
+  try {
+    const response = await axiosClient.post(endpoint, payload);
+    return response as unknown as ApiResponse;
+  } catch (error: any) {
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw error;
+  }
+}
 
 export const authApi = {
-  registerHost: async (userData: any) => {
-    try {
-      const response = await api.post('/users/register', userData);
-      return response.data;
-    } catch (error: any) {
-      if (error.response) {
-        throw error.response.data;
-      }
-      throw new Error('Network error. Please try again later.');
-    }
-  },
+  login: async (credentials: any): Promise<ApiResponse> => post(AUTH_ENDPOINTS.login, credentials),
+
+  registerHost: async (userData: any): Promise<ApiResponse> => post(AUTH_ENDPOINTS.register, userData),
+
+  requestPasswordReset: async (payload: ForgotPasswordPayload): Promise<ApiResponse> =>
+    post(AUTH_ENDPOINTS.forgotPassword, payload),
+
+  verifyResetCode: async (payload: VerifyResetCodePayload): Promise<ApiResponse> =>
+    post(AUTH_ENDPOINTS.verifyResetCode, payload),
+
+  resetPassword: async (payload: ResetPasswordPayload): Promise<ApiResponse> =>
+    post(AUTH_ENDPOINTS.resetPassword, payload),
 };
