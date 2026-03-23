@@ -1,7 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { z } from 'zod';
+
+// List of common disposable email domains to block
+const disposableDomains = [
+  'mailinator.com', 'temp-mail.org', '10minutemail.com', 
+  'guerrillamail.com', 'yopmail.com'
+];
+
+// Zod Schema for Validation (OWASP 2025 & VN Phone)
+const registerSchema = z.object({
+  fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự').max(100, 'Họ và tên quá dài'),
+  email: z.string().email('Email không đúng định dạng').refine((val) => {
+    const domain = val.split('@')[1];
+    return !disposableDomains.includes(domain?.toLowerCase());
+  }, 'Email tạm thời không được chấp nhận'),
+  phone: z.string().regex(/^(0|84|\+84)[35789][0-9]{8}$/, 'Số điện thoại di động Việt Nam không hợp lệ'),
+  password: z.string()
+    .min(12, 'Mật khẩu phải có ít nhất 12 ký tự (OWASP 2025)')
+    .regex(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 chữ viết hoa')
+    .regex(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 chữ viết thường')
+    .regex(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 chữ số')
+    .regex(/[^A-Za-z0-9]/, 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt'),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Mật khẩu xác nhận không khớp",
+  path: ["confirmPassword"]
+});
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -9,33 +36,47 @@ export default function RegisterPage() {
     fullName: '',
     email: '',
     phone: '',
-    passwordPlaintext: '',
+    password: '',
     confirmPassword: '',
   });
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [generalError, setGeneralError] = useState('');
   const [success, setSuccess] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear field-specific error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    setGeneralError('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
+    setGeneralError('');
+    setFormErrors({});
     setSuccess('');
 
-    // Basic validation
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.passwordPlaintext || !formData.confirmPassword) {
-      setError('Vui lòng điền đầy đủ thông tin.');
-      return;
-    }
-
-    if (formData.passwordPlaintext !== formData.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.');
-      return;
+    // Use safeParse to guarantee error catching without relying on instanceof
+    const validationResult = registerSchema.safeParse(formData);
+    
+    if (!validationResult.success) {
+      const flattenedErrors = validationResult.error.flatten();
+      const newFormErrors: Record<string, string> = {};
+      
+      // Zod flatten() maps errors to their respective path keys
+      Object.entries(flattenedErrors.fieldErrors).forEach(([key, messages]) => {
+        if (messages && messages.length > 0) {
+          newFormErrors[key] = messages[0]; // Grabs the first error message for that field
+        }
+      });
+      
+      setFormErrors(newFormErrors);
+      return; // Stop form submission here
     }
 
     try {
@@ -44,8 +85,8 @@ export default function RegisterPage() {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        passwordPlaintext: formData.passwordPlaintext,
-        passwordHash: '', // Handled by backend usually, but structure has it
+        password: formData.password,
+        passwordConfirm: formData.confirmPassword, 
       };
 
       const res = await authApi.registerHost(requestData);
@@ -53,18 +94,25 @@ export default function RegisterPage() {
       if (res && res.status === 201) {
         setSuccess('Đăng ký thành công! Đang chuyển hướng...');
         setTimeout(() => {
-          // Navigate to some success or login page
           navigate('/');
         }, 2000);
       } else {
-        setError(res.message || 'Đăng ký thất bại.');
+        setGeneralError(res.message || 'Đăng ký thất bại.');
       }
     } catch (err: any) {
-      setError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      setGeneralError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }
   };
+
+  const inputClassName = (fieldName: string) => `
+    w-full px-4 py-3 bg-[#f3f3f5] border focus:bg-white focus:outline-none focus:ring-4 rounded-xl text-sm transition-all
+    ${formErrors[fieldName] 
+      ? 'border-red-500 focus:ring-red-100 focus:border-red-500 bg-red-50/30' 
+      : 'border-transparent focus:ring-gray-100 focus:border-gray-300'
+    }
+  `;
 
   return (
     <div className="flex flex-col flex-grow items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)' }}>
@@ -82,12 +130,13 @@ export default function RegisterPage() {
 
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Đăng ký tài khoản Chủ nhà</h1>
-          <p className="text-gray-500 text-sm">Tạo tài khoản mới để bắt đầu đăng tin</p>
+          <p className="text-gray-500 text-sm">Tạo tài khoản mới cùng các tính năng quản lý</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
-            {error}
+        {generalError && (
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex gap-2 items-center">
+            <AlertCircle className="w-4 h-4" />
+            <span>{generalError}</span>
           </div>
         )}
 
@@ -97,65 +146,70 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Họ và tên</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Họ và tên</label>
             <input
               type="text"
               name="fullName"
               placeholder="Nguyễn Văn A"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[#f3f3f5] border-transparent focus:bg-white focus:border-gray-300 focus:ring-4 focus:ring-gray-100 rounded-xl text-sm transition-all outline-none"
+              className={inputClassName('fullName')}
             />
+            {formErrors.fullName && <p className="mt-1.5 text-[13px] text-red-500">{formErrors.fullName}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Email</label>
             <input
               type="email"
               name="email"
               placeholder="email@example.com"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[#f3f3f5] border-transparent focus:bg-white focus:border-gray-300 focus:ring-4 focus:ring-gray-100 rounded-xl text-sm transition-all outline-none"
+              className={inputClassName('email')}
             />
+            {formErrors.email && <p className="mt-1.5 text-[13px] text-red-500">{formErrors.email}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Số điện thoại</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Số điện thoại</label>
             <input
               type="tel"
               name="phone"
               placeholder="0901234567"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[#f3f3f5] border-transparent focus:bg-white focus:border-gray-300 focus:ring-4 focus:ring-gray-100 rounded-xl text-sm transition-all outline-none"
+              className={inputClassName('phone')}
             />
+            {formErrors.phone && <p className="mt-1.5 text-[13px] text-red-500">{formErrors.phone}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Mật khẩu</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Mật khẩu</label>
             <input
               type="password"
-              name="passwordPlaintext"
-              placeholder="••••••••"
-              value={formData.passwordPlaintext}
+              name="password"
+              placeholder="••••••••••••"
+              value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[#f3f3f5] border-transparent focus:bg-white focus:border-gray-300 focus:ring-4 focus:ring-gray-100 rounded-xl text-sm transition-all outline-none"
+              className={inputClassName('password')}
             />
+            {formErrors.password && <p className="mt-1.5 text-[13px] text-red-500">{formErrors.password}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Xác nhận mật khẩu</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">Xác nhận mật khẩu</label>
             <input
               type="password"
               name="confirmPassword"
-              placeholder="••••••••"
+              placeholder="••••••••••••"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-[#f3f3f5] border-transparent focus:bg-white focus:border-gray-300 focus:ring-4 focus:ring-gray-100 rounded-xl text-sm transition-all outline-none"
+              className={inputClassName('confirmPassword')}
             />
+            {formErrors.confirmPassword && <p className="mt-1.5 text-[13px] text-red-500">{formErrors.confirmPassword}</p>}
           </div>
 
           <button
