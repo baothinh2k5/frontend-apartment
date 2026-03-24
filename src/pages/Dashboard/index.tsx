@@ -3,6 +3,8 @@ import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
 import { Overview } from "./components/Overview";
 import { PlaceholderPage } from "./components/PlaceholderPage";
+import { MyProperties } from "./components/MyProperties";
+import { AddProperty } from "./components/AddProperty";
 import { Plus } from "lucide-react";
 
 const pages: Record<string, { title: string; description: string }> = {
@@ -29,11 +31,11 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen((v) => !v)} />
 
-        {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col p-5">
-          {activePage === "tong-quan" ? (
-            <Overview />
-          ) : (
+          {activePage === "tong-quan" && <Overview />}
+          {activePage === "tin-dang-cua-toi" && <MyProperties onPageChange={setActivePage} />}
+          {activePage === "dang-tin-moi" && <AddProperty onPageChange={setActivePage} />}
+          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi"].includes(activePage) && (
             <PlaceholderPage
               title={pages[activePage]?.title || ""}
               description={pages[activePage]?.description}
@@ -43,7 +45,10 @@ export default function Dashboard() {
       </div>
 
       {/* FAB */}
-      <button className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50">
+      <button 
+        onClick={() => setActivePage("dang-tin-moi")}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 hover:scale-105 active:scale-95"
+      >
         <Plus className="w-6 h-6" />
       </button>
     </div>
