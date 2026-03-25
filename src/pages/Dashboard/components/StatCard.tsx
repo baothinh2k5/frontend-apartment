@@ -25,7 +25,7 @@ function Sparkline({ data, color }: { data: { v: number }[]; color: string }) {
     })
     .join(" ");
 
-  const areaPath = `M0,${H} L${points.split(" ").map((p) => `L${p}`).join(" ")} L${W},${H} Z`;
+  const areaPath = `M0,${H} ${points.split(" ").map((p) => `L${p}`).join(" ")} L${W},${H} Z`;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 36 }}>

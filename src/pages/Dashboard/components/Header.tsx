@@ -1,5 +1,6 @@
 import { Menu, Bell, LogOut, Search, Calendar, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -7,6 +8,14 @@ interface HeaderProps {
 
 export function Header({ onMenuToggle }: HeaderProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   return (
     <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-5 flex-shrink-0">
@@ -41,7 +50,10 @@ export function Header({ onMenuToggle }: HeaderProps) {
         <div className="w-px h-5 bg-gray-200" />
 
         {/* Logout */}
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
           <LogOut className="w-4 h-4" />
           <span>Logout</span>
         </button>
