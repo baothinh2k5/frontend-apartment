@@ -55,10 +55,8 @@ const onRereshed = (token) => {
 axiosClient.interceptors.response.use(
   (response) => (response && response.data !== undefined ? response.data : response),
   async (error) => {
-    const {
-      config,
-      response: { status },
-    } = error;
+    const { config } = error;
+    const status = error.response?.status;
     const originalRequest = config;
 
     if (status === 401 && !originalRequest._retry) {

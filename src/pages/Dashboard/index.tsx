@@ -6,6 +6,7 @@ import { PlaceholderPage } from "./components/PlaceholderPage";
 import { MyProperties } from "./components/MyProperties";
 import { AddProperty } from "./components/AddProperty";
 import { AdminPropertyApproval } from "./components/AdminPropertyApproval";
+import { AdminAllProperties } from "./components/AdminAllProperties";
 import { Plus } from "lucide-react";
 
 const pages: Record<string, { title: string; description: string }> = {
@@ -49,12 +50,13 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen((v) => !v)} />
 
-        <div className="flex-1 overflow-hidden flex flex-col p-5">
+        <div className="flex-1 overflow-y-auto flex flex-col p-5">
           {activePage === "tong-quan" && <Overview />}
           {activePage === "tin-dang-cua-toi" && <MyProperties onPageChange={handlePageChange} onEdit={handleEdit} />}
           {activePage === "dang-tin-moi" && <AddProperty onPageChange={handlePageChange} initialData={editingProperty} />}
           {activePage === "duyet-tin-dang" && <AdminPropertyApproval />}
-          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang"].includes(activePage) && (
+          {activePage === "tat-ca-tin-dang" && <AdminAllProperties onEdit={handleEdit} />}
+          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang"].includes(activePage) && (
             <PlaceholderPage
               title={pages[activePage]?.title || ""}
               description={pages[activePage]?.description}
