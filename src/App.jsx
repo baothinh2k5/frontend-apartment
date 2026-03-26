@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ForgotPasswordVerifyPage from './pages/ForgotPasswordVerifyPage';
 import ForgotPasswordConfirmedPage from './pages/ForgotPasswordConfirmedPage';
 import ForgotPasswordResetPage from './pages/ForgotPasswordResetPage';
+import WaitingApprovalPage from './pages/WaitingApprovalPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 
@@ -43,6 +44,7 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/waiting-approval" element={<WaitingApprovalPage />} />
         <Route path="/forgot-password/verify" element={<ForgotPasswordVerifyPage />} />
         <Route path="/forgot-password/confirmed" element={<ForgotPasswordConfirmedPage />} />
         <Route path="/forgot-password/reset" element={<ForgotPasswordResetPage />} />

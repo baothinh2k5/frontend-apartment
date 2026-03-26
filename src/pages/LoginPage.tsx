@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
 
@@ -15,6 +15,7 @@ import { authApi } from '../api/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,7 +23,7 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [generalError, setGeneralError] = useState('');
+  const [generalError, setGeneralError] = useState(location.state?.error || '');
   const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -84,17 +85,26 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error("API Error detailed:", err);
 
-      // authApi.login throws error.response.data if it exists
-      // If it doesn't, it throws the original error object
       let errorMessage = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.';
 
+      // Case 1: Error was unwrapped by authApi.ts (err is response.data)
       if (err.message && !err.message.includes('status code')) {
-        // This is likely the backend message if it's already extracted or a custom error
         errorMessage = err.message;
-      } else if (err.response?.data?.message) {
-        // Fallback to searching in axios error structure
-        errorMessage = err.response.data.message;
-      } else if (typeof err === 'string') {
+      } else if (err.error && typeof err.error === 'string') {
+        errorMessage = err.error;
+      }
+      // Case 2: Raw Axios error (not unwrapped)
+      else if (err.response?.data) {
+        const data = err.response.data;
+        if (data.message) errorMessage = data.message;
+        else if (data.error) errorMessage = data.error;
+      }
+      // Case 3: Error object message (standard JS error)
+      else if (err.message && !err.message.includes('status code')) {
+        errorMessage = err.message;
+      }
+      // Case 4: Promise rejection is just a string
+      else if (typeof err === 'string') {
         errorMessage = err;
       }
 

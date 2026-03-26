@@ -15,6 +15,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
+  if (isAuthenticated && user?.status === 'LOCKED') {
+    localStorage.clear();
+    return <Navigate to="/login" replace state={{ error: "Tài khoản của bạn đã bị khóa, vui lòng liên hệ admin nếu có thắc mắc" }} />;
+  }
+
+  if (isAuthenticated && user?.status === 'PENDING') {
+    return <Navigate to="/waiting-approval" replace />;
+  }
+
   if (allowedRoles && user?.role?.code && !allowedRoles.includes(user.role.code)) {
     // Redirect to home if user doesn't have the required role
     return <Navigate to="/" replace />;
