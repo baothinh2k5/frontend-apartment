@@ -21,9 +21,10 @@ type PropertyFormValues = z.infer<typeof propertySchema>;
 
 interface AddPropertyProps {
   onPageChange: (page: string) => void;
+  initialData?: any;
 }
 
-export function AddProperty({ onPageChange }: AddPropertyProps) {
+export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [areas, setAreas] = useState<{ id: number, name: string }[]>([]);
@@ -46,17 +47,33 @@ export function AddProperty({ onPageChange }: AddPropertyProps) {
   }, []);
 
   // React Hook Form
-  const { register, handleSubmit, formState: { errors } } = useForm<PropertyFormValues>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       title: "",
       addressLine: "",
-      areaId: 1,      // Temp fallback
-      roomTypeId: 1,  // Temp fallback
+      areaId: 1,      
+      roomTypeId: 1,  
       bedrooms: 1,
       allowPets: false,
     }
   });
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        addressLine: initialData.addressLine || "",
+        monthlyPrice: initialData.monthlyPrice || 0,
+        areaM2: initialData.areaM2 || 0,
+        bedrooms: initialData.bedrooms || 0,
+        areaId: initialData.areaId || 1,
+        roomTypeId: initialData.roomTypeId || 1,
+        allowPets: initialData.allowPets || false,
+      });
+    }
+  }, [initialData, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -75,8 +92,13 @@ export function AddProperty({ onPageChange }: AddPropertyProps) {
 
       images.forEach((img) => formData.append("images", img));
 
-      await propertyApi.createProperty(formData);
-      alert("Đăng tin thành công! Tin của bạn đang chờ quản trị viên duyệt.");
+      if (initialData?.id) {
+        await propertyApi.updateProperty(initialData.id, formData);
+        alert("Cập nhật tin thành công!");
+      } else {
+        await propertyApi.createProperty(formData);
+        alert("Đăng tin thành công! Tin của bạn đang chờ quản trị viên duyệt.");
+      }
       onPageChange("tin-dang-cua-toi");
     } catch (err: any) {
       console.error(err);
@@ -96,7 +118,9 @@ export function AddProperty({ onPageChange }: AddPropertyProps) {
         >
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-xl font-bold text-gray-800">Đăng Tin Căn Hộ/Phòng Mới</h2>
+        <h2 className="text-xl font-bold text-gray-800">
+          {initialData ? "Chỉnh Sửa Tin Đăng" : "Đăng Tin Căn Hộ/Phòng Mới"}
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl">

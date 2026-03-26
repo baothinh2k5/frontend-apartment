@@ -24,12 +24,25 @@ export default function Dashboard() {
 
   const [activePage, setActivePage] = useState(isHost ? "tin-dang-cua-toi" : "tong-quan");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [editingProperty, setEditingProperty] = useState<any>(null);
+
+  const handleEdit = (property: any) => {
+    setEditingProperty(property);
+    setActivePage("dang-tin-moi");
+  };
+
+  const handlePageChange = (page: string) => {
+    if (page !== "dang-tin-moi") {
+      setEditingProperty(null);
+    }
+    setActivePage(page);
+  };
 
   return (
     <div className="flex h-screen w-full bg-[#eef2f8] overflow-hidden">
       {/* Sidebar */}
       {sidebarOpen && (
-        <Sidebar activePage={activePage} onPageChange={setActivePage} />
+        <Sidebar activePage={activePage} onPageChange={handlePageChange} />
       )}
 
       {/* Main */}
@@ -38,8 +51,8 @@ export default function Dashboard() {
 
         <div className="flex-1 overflow-hidden flex flex-col p-5">
           {activePage === "tong-quan" && <Overview />}
-          {activePage === "tin-dang-cua-toi" && <MyProperties onPageChange={setActivePage} />}
-          {activePage === "dang-tin-moi" && <AddProperty onPageChange={setActivePage} />}
+          {activePage === "tin-dang-cua-toi" && <MyProperties onPageChange={handlePageChange} onEdit={handleEdit} />}
+          {activePage === "dang-tin-moi" && <AddProperty onPageChange={handlePageChange} initialData={editingProperty} />}
           {activePage === "duyet-tin-dang" && <AdminPropertyApproval />}
           {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang"].includes(activePage) && (
             <PlaceholderPage

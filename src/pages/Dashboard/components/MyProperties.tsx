@@ -4,9 +4,10 @@ import { propertyApi } from "../../../api/propertyApi";
 
 interface MyPropertiesProps {
   onPageChange: (page: string) => void;
+  onEdit: (property: any) => void;
 }
 
-export function MyProperties({ onPageChange }: MyPropertiesProps) {
+export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -123,7 +124,10 @@ export function MyProperties({ onPageChange }: MyPropertiesProps) {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <button className="p-1.5 text-gray-400 hover:text-teal-600 bg-gray-50 rounded-md hover:bg-teal-100 transition-colors">
+                        <button 
+                          onClick={() => onEdit(p)}
+                          className="p-1.5 text-gray-400 hover:text-teal-600 bg-gray-50 rounded-md hover:bg-teal-100 transition-colors"
+                        >
                           <Edit size={16} />
                         </button>
                         <button 
