@@ -12,6 +12,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ForgotPasswordVerifyPage from './pages/ForgotPasswordVerifyPage';
 import ForgotPasswordConfirmedPage from './pages/ForgotPasswordConfirmedPage';
 import ForgotPasswordResetPage from './pages/ForgotPasswordResetPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
 
 function Home() {
   return (
@@ -44,7 +46,11 @@ function AppContent() {
         <Route path="/forgot-password/verify" element={<ForgotPasswordVerifyPage />} />
         <Route path="/forgot-password/confirmed" element={<ForgotPasswordConfirmedPage />} />
         <Route path="/forgot-password/reset" element={<ForgotPasswordResetPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Protected Dashboard Route */}
+        <Route element={<ProtectedRoute allowedRoles={['HOST', 'ADMIN']} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
       </Routes>
       {!isAuthPage && <Footer />}
     </div>
