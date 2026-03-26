@@ -26,6 +26,17 @@ const menuItems = [
 ];
 
 export function Sidebar({ activePage, onPageChange }: SidebarProps) {
+  const userJson = localStorage.getItem("user");
+  const user = userJson ? JSON.parse(userJson) : null;
+  const roleCode = user?.role?.code || "HOST";
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (roleCode === "ADMIN") return true;
+    
+    // HOST only sees these
+    return ["tin-dang-cua-toi", "dang-tin-moi", "cai-dat"].includes(item.id);
+  });
+
   return (
     <div className="w-[220px] min-h-screen bg-[#1a2340] flex flex-col flex-shrink-0">
       {/* Logo */}
@@ -38,7 +49,7 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
 
       {/* Menu */}
       <nav className="flex-1 py-4 px-3">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
           return (

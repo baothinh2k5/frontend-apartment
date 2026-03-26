@@ -105,13 +105,21 @@ export function MyProperties({ onPageChange }: MyPropertiesProps) {
                       {p.monthlyPrice?.toLocaleString()} đ
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full ${
-                        p.status === "PENDING" ? "bg-amber-100 text-amber-700" :
-                        p.status === "DELETED" ? "bg-red-100 text-red-700" :
-                        "bg-green-100 text-green-700"
-                      }`}>
-                        {p.status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full w-fit ${
+                          p.status === "PENDING" ? "bg-amber-100 text-amber-700" :
+                          p.status === "REJECTED" ? "bg-red-100 text-red-700" :
+                          p.status === "DELETED" ? "bg-gray-100 text-gray-500" :
+                          "bg-green-100 text-green-700"
+                        }`}>
+                          {p.status}
+                        </span>
+                        {p.status === "REJECTED" && p.rejectedReason && (
+                          <div className="text-[10px] text-red-500 italic max-w-[150px] line-clamp-2" title={p.rejectedReason}>
+                            Lý do: {p.rejectedReason}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">

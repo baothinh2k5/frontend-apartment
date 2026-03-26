@@ -40,9 +40,74 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRereshed = (token) => {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
 axiosClient.interceptors.response.use(
   (response) => (response && response.data !== undefined ? response.data : response),
-  (error) => {
+  async (error) => {
+    const {
+      config,
+      response: { status },
+    } = error;
+    const originalRequest = config;
+
+    if (status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(axiosClient(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        isRefreshing = false;
+        // Redirect to login or clear data
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      try {
+        const response = await axios.post(
+          `${normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL)}/users/refresh-token`,
+          { refreshToken }
+        );
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+
+        isRefreshing = false;
+        onRereshed(accessToken);
+
+        return axiosClient(originalRequest);
+      } catch (refreshError) {
+        isRefreshing = false;
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
     console.error("Loi tu Server:", error.response?.data || error.message);
     return Promise.reject(error);
   }

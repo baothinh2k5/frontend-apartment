@@ -10,6 +10,12 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
+  const userJson = localStorage.getItem("user");
+  const user = userJson ? JSON.parse(userJson) : null;
+  const userName = user?.fullName || "User";
+  const userRole = user?.role?.name || "Member";
+  const initial = userName.charAt(0).toUpperCase();
+
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -24,16 +30,16 @@ export function Header({ onMenuToggle }: HeaderProps) {
       </button>
 
       <div className="flex items-center gap-4">
-        {/* Admin */}
+        {/* User Info */}
         <div className="relative">
           <button
             onClick={() => setShowDropdown(!showDropdown)}
             className="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors"
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-              A
+              {initial}
             </div>
-            <span className="text-sm text-gray-700">Admin</span>
+            <span className="text-sm text-gray-700">{userName} ({userRole})</span>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
         </div>

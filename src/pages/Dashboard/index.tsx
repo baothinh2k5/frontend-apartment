@@ -5,6 +5,7 @@ import { Overview } from "./components/Overview";
 import { PlaceholderPage } from "./components/PlaceholderPage";
 import { MyProperties } from "./components/MyProperties";
 import { AddProperty } from "./components/AddProperty";
+import { AdminPropertyApproval } from "./components/AdminPropertyApproval";
 import { Plus } from "lucide-react";
 
 const pages: Record<string, { title: string; description: string }> = {
@@ -17,7 +18,11 @@ const pages: Record<string, { title: string; description: string }> = {
 };
 
 export default function Dashboard() {
-  const [activePage, setActivePage] = useState("tong-quan");
+  const userJson = localStorage.getItem("user");
+  const user = userJson ? JSON.parse(userJson) : null;
+  const isHost = user?.role?.code === "HOST";
+
+  const [activePage, setActivePage] = useState(isHost ? "tin-dang-cua-toi" : "tong-quan");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -35,7 +40,8 @@ export default function Dashboard() {
           {activePage === "tong-quan" && <Overview />}
           {activePage === "tin-dang-cua-toi" && <MyProperties onPageChange={setActivePage} />}
           {activePage === "dang-tin-moi" && <AddProperty onPageChange={setActivePage} />}
-          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi"].includes(activePage) && (
+          {activePage === "duyet-tin-dang" && <AdminPropertyApproval />}
+          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang"].includes(activePage) && (
             <PlaceholderPage
               title={pages[activePage]?.title || ""}
               description={pages[activePage]?.description}
@@ -44,13 +50,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* FAB */}
-      <button 
-        onClick={() => setActivePage("dang-tin-moi")}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 hover:scale-105 active:scale-95"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {/* FAB - Chỉ hiện cho HOST hoặc nếu thích */}
+      {isHost && (
+        <button 
+          onClick={() => setActivePage("dang-tin-moi")}
+          className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 hover:scale-105 active:scale-95"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
     </div>
   );
 }

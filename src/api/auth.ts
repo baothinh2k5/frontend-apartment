@@ -55,4 +55,7 @@ export const authApi = {
 
   resetPassword: async (payload: ResetPasswordPayload): Promise<ApiResponse> =>
     post(AUTH_ENDPOINTS.resetPassword, payload),
+    
+  refreshToken: async (refreshToken: string): Promise<ApiResponse> =>
+    post('/users/refresh-token', { refreshToken }),
 };
