@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Navigation } from './components/Navigation';
 import { MapSection } from './components/MapSection';
 import { PropertyGrid } from './components/PropertyGrid';
-import { ChatBubble } from './components/ChatBubble';
+import { AiChatWidgetView } from './components/AiSearch/AiChatWidgetView';
 import { Footer } from './components/Footer';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -20,7 +20,7 @@ function Home() {
         <MapSection />
         <PropertyGrid />
       </div>
-      <ChatBubble />
+      <AiChatWidgetView />
     </>
   );
 }
