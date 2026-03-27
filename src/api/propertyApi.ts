@@ -2,12 +2,17 @@ import axiosClient from './axiosClient';
 
 const PROPERTY_ENDPOINTS = {
   me: '/api/v1/properties/me',
+  approved: '/api/v1/properties/approved',
   base: '/api/v1/properties'
 } as const;
 
 export const propertyApi = {
   getMyProperties: async (page = 0, size = 10) => {
     return axiosClient.get(PROPERTY_ENDPOINTS.me, { params: { page, size } });
+  },
+
+  getApprovedProperties: async (page = 0, size = 10) => {
+    return axiosClient.get(PROPERTY_ENDPOINTS.approved, { params: { page, size } });
   },
 
   createProperty: async (formData: FormData) => {

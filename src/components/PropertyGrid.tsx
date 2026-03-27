@@ -1,16 +1,63 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PropertyCard } from './PropertyCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockProperties } from '../data/mockData';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { propertyApi } from '../api/propertyApi';
 
 const PROPERTIES_PER_PAGE = 8;
 
 export function PropertyGrid() {
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(mockProperties.length / PROPERTIES_PER_PAGE);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const startIndex = (currentPage - 1) * PROPERTIES_PER_PAGE;
-  const currentProperties = mockProperties.slice(startIndex, startIndex + PROPERTIES_PER_PAGE);
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const res = await propertyApi.getApprovedProperties(currentPage - 1, PROPERTIES_PER_PAGE);
+        const pageData = res.data || res;
+        
+        // Map backend PropertyResponse to frontend Property type
+        const mappedProperties = (pageData.content || []).map((p: any) => ({
+          id: p.id,
+          image: p.images?.find((img: any) => img.isThumbnail)?.imageUrl || p.images?.[0]?.imageUrl || '/placeholder-property.jpg',
+          title: p.title,
+          price: new Intl.NumberFormat('vi-VN', { 
+            style: 'currency', 
+            currency: 'VND' 
+          }).format(p.monthlyPrice) + ' / tháng',
+          priceValue: p.monthlyPrice,
+          location: `${p.addressLine}, ${p.areaName}`,
+          beds: p.bedrooms || 0,
+          baths: 1, // Defaulting as backend doesn't have baths yet
+          area: p.areaM2 || 0,
+          rating: 4.8, // Mocked
+          reviewCount: Math.floor(Math.random() * 50) + 10, // Mocked
+          propertyType: 'canho', // Defaulting as mapping is complex
+        }));
+
+        setProperties(mappedProperties);
+        setTotalPages(pageData.totalPages || 0);
+      } catch (error) {
+        console.error("Failed to fetch properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [currentPage]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
+  const currentProperties = properties;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-16">
@@ -23,9 +70,15 @@ export function PropertyGrid() {
 
       {/* Property Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {currentProperties.map((property) => (
-          <PropertyCard key={property.id} {...property} />
-        ))}
+        {currentProperties.length > 0 ? (
+          currentProperties.map((property) => (
+            <PropertyCard key={property.id} {...property} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-20 text-gray-500">
+            Không có bất động sản nào được tìm thấy.
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
