@@ -15,6 +15,10 @@ export const propertyApi = {
     return axiosClient.get(PROPERTY_ENDPOINTS.approved, { params: { page, size } });
   },
 
+  getPropertyById: async (id: string) => {
+    return axiosClient.get(`${PROPERTY_ENDPOINTS.base}/${id}`);
+  },
+
   createProperty: async (formData: FormData) => {
     return axiosClient.post(PROPERTY_ENDPOINTS.base, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
