@@ -1,6 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Send, Sparkles, X, Loader2 } from 'lucide-react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Send, Sparkles, X, Loader2, ExternalLink } from 'lucide-react';
 import { searchWithAI, AiSearchResponse, Property } from '../../api/aiQueryService';
+
+const CHAT_STORAGE_KEY = 'leaselink_ai_chat';
 
 const MASCOT_MESSAGES = [
   'Xin chào bạn! Mình là trợ lý AI của LeaseLink, sẵn sàng hỗ trợ tìm nhà theo nhu cầu của bạn.',
@@ -9,7 +12,7 @@ const MASCOT_MESSAGES = [
   'Thử nhắn như “Căn hộ 1 phòng ngủ ở Hải Châu, yên tĩnh” để mình tìm nhanh cho bạn nhé.',
 ];
 
-function AiPropertyCard({ property }: { property: Property }) {
+function AiPropertyCard({ property, onNavigate }: { property: Property; onNavigate: (propertyId: string) => void }) {
   const imageUrl =
     property.images && property.images.length > 0
       ? property.images[0].imageUrl
@@ -21,10 +24,13 @@ function AiPropertyCard({ property }: { property: Property }) {
   }).format(property.monthlyPrice);
 
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-teal-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
+    <div
+      onClick={() => onNavigate(property.id)}
+      className="group/card w-full cursor-pointer overflow-hidden rounded-2xl border border-teal-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+    >
       <div className="flex h-[124px]">
         <div className="relative w-[118px] shrink-0 overflow-hidden bg-slate-100">
-          <img src={imageUrl} alt={property.title} className="h-full w-full object-cover" />
+          <img src={imageUrl} alt={property.title} className="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105" />
           <div className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-teal-700 shadow-sm">
             {property.roomTypeName}
           </div>
@@ -41,7 +47,12 @@ function AiPropertyCard({ property }: { property: Property }) {
             <div className="text-xs text-slate-500">
               {property.bedrooms} PN <span className="mx-1 text-slate-300">|</span> {property.areaM2} m²
             </div>
-            <div className="text-sm font-bold text-teal-700">{formattedPrice}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-teal-700">{formattedPrice}</span>
+              <span className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-600 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100">
+                Xem <ExternalLink size={10} />
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -112,6 +123,7 @@ function MascotLauncher({
 }
 
 export function AiChatWidgetView() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showMascotGreeting, setShowMascotGreeting] = useState(true);
   const [greetingIndex, setGreetingIndex] = useState(0);
@@ -123,6 +135,47 @@ export function AiChatWidgetView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // --- Session persistence ---
+  const saveChatState = useCallback(() => {
+    try {
+      const chatState = {
+        submittedMessage,
+        response,
+        message,
+      };
+      sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatState));
+    } catch {
+      // silently ignore if sessionStorage is full or unavailable
+    }
+  }, [submittedMessage, response, message]);
+
+  // Restore chat from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(CHAT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.submittedMessage) setSubmittedMessage(parsed.submittedMessage);
+        if (parsed.response) setResponse(parsed.response);
+        if (parsed.message) setMessage(parsed.message);
+        setIsOpen(true);
+        setShowMascotGreeting(false);
+        sessionStorage.removeItem(CHAT_STORAGE_KEY);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Navigate to property detail & save chat before leaving
+  const handlePropertyNavigate = useCallback(
+    (propertyId: string) => {
+      saveChatState();
+      navigate(`/property/${propertyId}`);
+    },
+    [saveChatState, navigate],
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -275,7 +328,7 @@ export function AiChatWidgetView() {
                 {response.properties && response.properties.length > 0 && (
                   <div className="flex flex-col gap-3 pb-4">
                     {response.properties.map((prop) => (
-                      <AiPropertyCard key={prop.id} property={prop} />
+                      <AiPropertyCard key={prop.id} property={prop} onNavigate={handlePropertyNavigate} />
                     ))}
                   </div>
                 )}
