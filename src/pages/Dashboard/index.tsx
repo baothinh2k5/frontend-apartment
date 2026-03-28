@@ -7,6 +7,7 @@ import { MyProperties } from "./components/MyProperties";
 import { AddProperty } from "./components/AddProperty";
 import { AdminPropertyApproval } from "./components/AdminPropertyApproval";
 import { AdminAllProperties } from "./components/AdminAllProperties";
+import { AdminHostManagement } from "./components/AdminHostManagement";
 import { Plus } from "lucide-react";
 
 const pages: Record<string, { title: string; description: string }> = {
@@ -56,7 +57,8 @@ export default function Dashboard() {
           {activePage === "dang-tin-moi" && <AddProperty onPageChange={handlePageChange} initialData={editingProperty} />}
           {activePage === "duyet-tin-dang" && <AdminPropertyApproval />}
           {activePage === "tat-ca-tin-dang" && <AdminAllProperties onEdit={handleEdit} />}
-          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang"].includes(activePage) && (
+          {activePage === "quan-ly-host" && <AdminHostManagement />}
+          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"].includes(activePage) && (
             <PlaceholderPage
               title={pages[activePage]?.title || ""}
               description={pages[activePage]?.description}
