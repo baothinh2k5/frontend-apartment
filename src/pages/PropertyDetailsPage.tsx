@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Star, 
-  MapPin, 
-  Home, 
-  Maximize2, 
-  Phone, 
+import {
+  Star,
+  MapPin,
+  Home,
+  Maximize2,
+  Phone,
   Mail,
   Share2,
   ChevronLeft,
@@ -19,44 +19,16 @@ import {
   Refrigerator,
   Bed,
   PawPrint,
-  ArrowLeft
+  ArrowLeft,
+  MessageCircle,
+  MessageSquare,
 } from 'lucide-react';
 import { PropertyGallery } from '../components/PropertyDetail/PropertyGallery';
 import { PropertyMapVietnamese } from '../components/PropertyDetail/PropertyMapVietnamese';
 import { PropertyCard } from '../components/PropertyCard';
-import { LeaseLinkChatbot } from '../components/PropertyDetail/LeaseLinkChatbot';
+import { AiChatWidgetView } from '../components/AiSearch/AiChatWidgetView';
 import { propertyApi } from '../api/propertyApi';
 import { motion } from 'framer-motion';
-
-const similarProperties = [
-  {
-    id: 1,
-    image: 'https://images.unsplash.com/photo-1669317139155-912572c38362?w=400',
-    title: 'Căn hộ 1PN gần biển Mỹ Khê, full nội thất',
-    location: 'Dương Tự Quán, Mỹ An, Mỹ Khê',
-    rating: 4.8,
-    reviewCount: 27,
-    beds: 1,
-    baths: 1,
-    area: 70,
-    price: '14.000.000 đ / tháng',
-    propertyType: 'canho' as const,
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1704428382583-c9c7c1e55d94?w=400',
-    title: '5/4 Trống sắn căn 1PN đẹp gần biển',
-    location: 'Ngô Quyền, Sơn Trà, Sơn Trà',
-    rating: 4.8,
-    reviewCount: 56,
-    beds: 1,
-    baths: 1,
-    area: 70,
-    price: '9.500.000 đ / tháng',
-    propertyType: 'canho' as const,
-  },
-];
-
 
 export default function PropertyDetailsPage() {
   const { id } = useParams();
@@ -74,15 +46,15 @@ export default function PropertyDetailsPage() {
         const res = await propertyApi.getPropertyById(id);
         const data = res.data || res;
 
-        // Map backend response to UI model
+        // Map backend response to UI model to prevent crashes
         const mappedData = {
           id: data.id,
           title: data.title,
-          rating: 4.8, // Mocked as backend doesn't have it yet
-          reviewCount: Math.floor(Math.random() * 50) + 10,
+          rating: 4.8, 
+          reviewCount: 20,
           location: `${data.addressLine}, ${data.areaName}`,
           price: data.monthlyPrice,
-          deposit: data.monthlyPrice, // Often matches 1 month
+          deposit: data.monthlyPrice, 
           bedrooms: data.bedrooms || 0,
           roomType: data.roomTypeName || 'Chưa xác định',
           area: data.areaM2 || 0,
@@ -137,7 +109,7 @@ export default function PropertyDetailsPage() {
         <p className="text-gray-500 font-medium mb-8 leading-relaxed">
           {error || "Chúng mình không tìm thấy thông tin căn hộ này. Có thể tin đã bị ẩn hoặc gỡ bỏ."}
         </p>
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all active:scale-98"
         >
@@ -152,7 +124,7 @@ export default function PropertyDetailsPage() {
       {/* Top Header / Back Button */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30 transition-all">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors font-medium group"
           >
@@ -176,7 +148,7 @@ export default function PropertyDetailsPage() {
           {/* Left Column - Main Info (8 cols) */}
           <div className="lg:col-span-8 space-y-8">
             {/* Gallery Section */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -191,11 +163,6 @@ export default function PropertyDetailsPage() {
                   <span className="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                     Property Detail
                   </span>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span className="text-sm font-bold text-amber-700">{property.rating}</span>
-                    <span className="text-xs text-amber-600/70">({property.reviewCount}+ đánh giá)</span>
-                  </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight mb-3">
                   {property.title}
@@ -284,7 +251,7 @@ export default function PropertyDetailsPage() {
               {/* Contact Card */}
               <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-teal-50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                
+
                 {/* Price Display */}
                 <div className="mb-8 relative z-10">
                   <div className="flex items-baseline gap-2">
@@ -292,16 +259,6 @@ export default function PropertyDetailsPage() {
                       {property.price.toLocaleString('vi-VN')} đ
                     </p>
                     <p className="text-gray-400 font-semibold text-sm">/tháng</p>
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tiền cọc</span>
-                      <span className="text-sm font-bold text-gray-900">{property.deposit.toLocaleString('vi-VN')} đ</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-green-50/50 rounded-xl border border-green-100">
-                      <span className="text-xs font-bold text-green-600 uppercase tracking-wider">Trạng thái</span>
-                      <span className="text-xs font-extrabold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">CÒN PHÒNG</span>
-                    </div>
                   </div>
                 </div>
 
@@ -321,19 +278,24 @@ export default function PropertyDetailsPage() {
 
                 {/* Main Actions */}
                 <div className="space-y-3">
-                  <button
-                    onClick={() => setPhoneRevealed(!phoneRevealed)}
+                  <a
+                    href={`https://zalo.me/0793778529`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] group"
                   >
-                    <Phone className="w-5 h-5 group-hover:animate-bounce" />
-                    <span className="text-lg">
-                      {phoneRevealed ? property.landlord.phone : 'Hiện số điện thoại'}
-                    </span>
-                  </button>
-                  <button className="w-full h-14 border-2 border-primary text-primary hover:bg-teal-50 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98]">
-                    <Mail className="w-5 h-5" />
-                    <span className="text-lg">Gửi lời mời tư vấn</span>
-                  </button>
+                    <MessageCircle className="w-5 h-5 group-hover:animate-bounce" />
+                    <span className="text-lg">Zalo</span>
+                  </a>
+                  <a
+                    href={`https://api.whatsapp.com/qr/FM3NYOHE3LQEC1?autoload=1&app_absent=0&utm_campaign=zalo&utm_source=zalo`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-14 border-2 border-primary text-primary hover:bg-teal-50 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
+                  >
+                    <MessageSquare className="w-5 h-5 group-hover:animate-bounce" />
+                    <span className="text-lg">WhatsApp</span>
+                  </a>
                 </div>
 
                 {/* Safety Badge */}
@@ -343,43 +305,19 @@ export default function PropertyDetailsPage() {
                     <div>
                       <p className="text-xs font-black text-amber-700 uppercase tracking-tight mb-1">Cảnh báo an toàn</p>
                       <p className="text-[10px] font-bold text-amber-800/80 leading-snug">
-                        Chỉ giao dịch cọc tiền sau khi đã xem phòng trực tiếp & ký hợp đồng tại LeaseLink.
+                        Chỉ giao dịch cọc tiền sau khi xem phòng trực tiếp & ký hợp đồng.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              {/* Share Card Mini */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-500">Quan tâm đến tin này?</span>
-                <button className="text-sm font-black text-primary hover:underline">Lưu tin ngay</button>
-              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Similar Properties Section */}
-        <div className="mt-20">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">Đề xuất tương tự</h2>
-              <div className="h-1.5 w-20 bg-primary mt-2 rounded-full"></div>
-            </div>
-            <button className="text-gray-400 hover:text-primary transition-colors font-bold flex items-center gap-2">
-              Xem tất cả <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {similarProperties.map((property: any) => (
-              <PropertyCard key={property.id} {...property} />
-            ))}
           </div>
         </div>
       </main>
 
       {/* Chatbot */}
-      <LeaseLinkChatbot />
+      <AiChatWidgetView />
     </div>
   );
 }

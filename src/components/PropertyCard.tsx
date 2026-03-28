@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { Heart, Star } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Property } from '../types/property';
-
 import { useNavigate } from 'react-router-dom';
 
 export function PropertyCard(property: Property) {
   const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
-  const { id, image, title, price, location, beds, baths, area, badge, rating, reviewCount } = property;
+  const { id, image, title, price, location, beds, baths, area, badge } = property;
 
   return (
     <div 
@@ -43,11 +42,6 @@ export function PropertyCard(property: Property) {
       <div className="p-4 flex flex-col flex-grow">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 pr-2">{title}</h3>
-          <div className="flex items-center space-x-1 shrink-0 bg-gray-50 px-2 py-1 rounded-md">
-            <Star size={14} className="fill-amber-400 text-amber-400" />
-            <span className="text-sm font-medium text-gray-900">{rating}</span>
-            <span className="text-xs text-gray-500">({reviewCount})</span>
-          </div>
         </div>
         <p className="text-gray-500 text-sm mb-3 flex-grow">{location}</p>
         

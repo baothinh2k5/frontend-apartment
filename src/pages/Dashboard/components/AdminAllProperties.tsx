@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../../../api/axiosClient";
-import { Check, X, Eye, Edit, Trash2, Filter } from "lucide-react";
+import { Check, X, Eye, Edit, Trash2, Filter, MessageSquare, Plus } from "lucide-react";
 
 interface Property {
   id: string;
@@ -16,6 +16,8 @@ interface Property {
   allowPets: boolean;
   status: string;
   createdAt: string;
+  rejectedReason?: string;
+  hostPhone?: string;
   images: Array<{
     id: string;
     imageUrl: string;
@@ -41,7 +43,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
       setLoading(true);
       const params: any = { page, size: 10 };
       if (statusFilter) params.status = statusFilter;
-      
+
       const res: any = await axiosClient.get("/api/v1/properties", { params });
       setProperties(res.content || []);
       setTotalPages(res.totalPages || 0);
@@ -95,11 +97,11 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
           <h2 className="text-xl font-bold text-gray-800">Quản Lý Toàn Bộ Tin Đăng</h2>
           <p className="text-sm text-gray-500 mt-1">Tổng cộng {totalElements} tin trong hệ thống</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
             <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <select 
+            <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -161,28 +163,27 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                       {p.monthlyPrice.toLocaleString()} đ
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${
-                        p.status === "PENDING" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                        p.status === "APPROVED" ? "bg-green-50 text-green-600 border-green-100" :
-                        "bg-red-50 text-red-600 border-red-100"
-                      }`}>
-                        {p.status === "PENDING" ? "CHỜ DUYỆT" : 
-                         p.status === "APPROVED" ? "ĐÃ DUYỆT" : "TỪ CHỐI"}
+                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${p.status === "PENDING" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                          p.status === "APPROVED" ? "bg-green-50 text-green-600 border-green-100" :
+                            "bg-red-50 text-red-600 border-red-100"
+                        }`}>
+                        {p.status === "PENDING" ? "CHỜ DUYỆT" :
+                          p.status === "APPROVED" ? "ĐÃ DUYỆT" : "TỪ CHỐI"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <button 
+                        <button
                           onClick={() => setViewProperty(p)}
                           className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-all" title="Xem nhanh">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => onEdit(p)}
                           className="p-1.5 hover:bg-teal-50 text-gray-400 hover:text-teal-500 rounded-lg transition-all" title="Chỉnh sửa">
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(p.id)}
                           className="p-1.5 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all" title="Xóa vĩnh viễn">
                           <Trash2 className="w-4 h-4" />
@@ -195,7 +196,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination placeholder if needed */}
         {totalPages > 1 && (
           <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-center gap-2">
@@ -203,9 +204,8 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
-                  page === i ? "bg-teal-500 text-white shadow-md shadow-teal-200" : "bg-white text-gray-500 hover:bg-gray-100"
-                }`}
+                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${page === i ? "bg-teal-500 text-white shadow-md shadow-teal-200" : "bg-white text-gray-500 hover:bg-gray-100"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -217,17 +217,17 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
       {/* Detail Modal (Simplified from AdminPropertyApproval) */}
       {viewProperty && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in duration-200">
-             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in duration-200 flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-xl font-bold text-gray-900">Chi tiết tài sản</h3>
-              <button 
+              <button
                 onClick={() => setViewProperty(null)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
-            <div className="overflow-y-auto p-6 space-y-6">
+
+            <div className="overflow-y-auto p-6 space-y-6 flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="aspect-[16/10] bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
@@ -245,56 +245,73 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
-                      viewProperty.status === "PENDING" ? "bg-amber-100 text-amber-600" :
-                      viewProperty.status === "APPROVED" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                    }`}>
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${viewProperty.status === "PENDING" ? "bg-amber-100 text-amber-600" :
+                        viewProperty.status === "APPROVED" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                      }`}>
                       {viewProperty.status}
                     </span>
                     <h4 className="text-2xl font-bold text-gray-900 mt-2">{viewProperty.title}</h4>
                     <p className="text-gray-500 text-sm mt-1">{viewProperty.addressLine}</p>
                   </div>
-                  
+
                   <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
                     <div className="text-xs text-teal-600 font-medium">Giá thuê hàng tháng</div>
                     <div className="text-2xl font-extrabold text-teal-700">
                       {viewProperty.monthlyPrice.toLocaleString()} VNĐ
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <StatItem label="Diện tích" value={`${viewProperty.areaM2} m²`} />
                     <StatItem label="Phòng ngủ" value={viewProperty.bedrooms} />
                     <StatItem label="Loại phòng" value={viewProperty.roomTypeName} />
                     <StatItem label="Thú cưng" value={viewProperty.allowPets ? "Có" : "Không"} />
                   </div>
-                  
+
+                  {/* Description Section */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-3">Mô tả chi tiết</h5>
+                    <div className="bg-gray-50/80 p-4 rounded-xl text-sm text-gray-600 leading-relaxed whitespace-pre-wrap border border-gray-100/50 italic">
+                      {viewProperty.description || "Không có mô tả chi tiết từ chủ nhà."}
+                    </div>
+                  </div>
+
                   <div className="pt-4 border-t border-gray-100">
-                     <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-2">Thông tin người đăng</h5>
-                     <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
-                       <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold">{viewProperty.hostName[0].toUpperCase()}</div>
-                       <div>
-                         <div className="text-sm font-bold text-gray-800">{viewProperty.hostName}</div>
-                         <div className="text-[10px] text-gray-500">Host tin đăng</div>
-                       </div>
-                     </div>
+                    <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-2">Thông tin người đăng</h5>
+                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
+                      <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold">{viewProperty.hostName[0].toUpperCase()}</div>
+                      <div>
+                        <div className="text-sm font-bold text-gray-800">{viewProperty.hostName}</div>
+                        <div className="text-[10px] text-gray-400 font-medium">{viewProperty.hostPhone || "Chưa cập nhật SĐT"}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Rejected Reason */}
+              <div className="space-y-6">
+                {viewProperty.status === "REJECTED" && viewProperty.rejectedReason && (
+                  <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+                    <h5 className="font-bold text-xs uppercase tracking-wider text-red-400 mb-2">Lý do từ chối</h5>
+                    <p className="text-sm text-red-600">{viewProperty.rejectedReason}</p>
+                  </div>
+                )}
+              </div>
             </div>
-            
+
             <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex gap-3">
               {viewProperty.status === "PENDING" && (
-                <button 
+                <button
                   onClick={() => handleApprove(viewProperty.id)}
                   className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-all shadow-md active:scale-95">
                   Duyệt tin này
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => {
                   onEdit(viewProperty);
                   setViewProperty(null);
@@ -302,7 +319,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all active:scale-95">
                 Chỉnh sửa
               </button>
-              <button 
+              <button
                 onClick={() => {
                   handleDelete(viewProperty.id);
                   setViewProperty(null);
@@ -322,5 +339,12 @@ const StatItem = ({ label, value }: { label: string; value: any }) => (
   <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
     <div className="text-[10px] text-gray-400 uppercase font-medium">{label}</div>
     <div className="text-sm font-bold text-gray-800 mt-0.5">{value}</div>
+  </div>
+);
+
+const AmenityItem = ({ icon: Icon, label }: { icon: any; label: string }) => (
+  <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-50 text-gray-600">
+    <Icon className="w-3 h-3 text-teal-500" />
+    <span className="text-[11px] font-medium">{label}</span>
   </div>
 );
