@@ -3,12 +3,18 @@ import { Heart, Star } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Property } from '../types/property';
 
+import { useNavigate } from 'react-router-dom';
+
 export function PropertyCard(property: Property) {
+  const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
-  const { image, title, price, location, beds, baths, area, badge, rating, reviewCount } = property;
+  const { id, image, title, price, location, beds, baths, area, badge, rating, reviewCount } = property;
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 group cursor-pointer flex flex-col h-full">
+    <div 
+      onClick={() => navigate(`/property/${id}`)}
+      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-gray-100 group cursor-pointer flex flex-col h-full"
+    >
       <div className="relative overflow-hidden aspect-[4/3]">
         <ImageWithFallback
           src={image}

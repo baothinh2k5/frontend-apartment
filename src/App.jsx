@@ -13,6 +13,7 @@ import ForgotPasswordVerifyPage from './pages/ForgotPasswordVerifyPage';
 import ForgotPasswordConfirmedPage from './pages/ForgotPasswordConfirmedPage';
 import ForgotPasswordResetPage from './pages/ForgotPasswordResetPage';
 import WaitingApprovalPage from './pages/WaitingApprovalPage';
+import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { SearchProvider } from './context/SearchContext';
 
@@ -49,6 +50,7 @@ function AppContent() {
         <Route path="/forgot-password/verify" element={<ForgotPasswordVerifyPage />} />
         <Route path="/forgot-password/confirmed" element={<ForgotPasswordConfirmedPage />} />
         <Route path="/forgot-password/reset" element={<ForgotPasswordResetPage />} />
+        <Route path="/property/:id" element={<PropertyDetailsPage />} />
         
         {/* Protected Dashboard Route */}
         <Route element={<ProtectedRoute allowedRoles={['HOST', 'ADMIN']} />}>
