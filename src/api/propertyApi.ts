@@ -26,6 +26,7 @@ export const propertyApi = {
     size?: number;
   }) => {
     return axiosClient.get(`${PROPERTY_ENDPOINTS.base}/search`, { params });
+  },
 
   getPropertyById: async (id: string) => {
     return axiosClient.get(`${PROPERTY_ENDPOINTS.base}/${id}`);
