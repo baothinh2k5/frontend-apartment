@@ -19,6 +19,7 @@ interface SearchContextType {
   filters: SearchFilters;
   setFilters: (filters: SearchFilters) => void;
   triggerSearch: () => void;
+  resetSearch: () => void;
   searchVersion: number;
   areas: LookupItem[];
   roomTypes: LookupItem[];
@@ -36,6 +37,11 @@ export function SearchProvider({ children }: { children: ReactNode }) {
 
   const triggerSearch = useCallback(() => {
     setSearchVersion((v) => v + 1);
+  }, []);
+
+  const resetSearch = useCallback(() => {
+    setFilters({});
+    setSearchVersion(0);
   }, []);
 
   useEffect(() => {
@@ -66,6 +72,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         filters, 
         setFilters, 
         triggerSearch, 
+        resetSearch,
         searchVersion, 
         areas, 
         roomTypes,

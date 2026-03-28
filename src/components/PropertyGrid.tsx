@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Loader2, SearchX } from 'lucide-react';
 import { propertyApi } from '../api/propertyApi';
 import { useSearch } from '../context/SearchContext';
 
-const PROPERTIES_PER_PAGE = 12;
+const PROPERTIES_PER_PAGE = 8;
 
 export function PropertyGrid() {
   const [currentPage, setCurrentPage] = useState(1);

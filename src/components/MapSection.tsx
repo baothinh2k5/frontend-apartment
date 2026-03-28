@@ -28,6 +28,7 @@ export function MapSection() {
   const { 
     setFilters, 
     triggerSearch, 
+    resetSearch,
     areas, 
     roomTypes, 
     loadingLookups 
@@ -60,8 +61,7 @@ export function MapSection() {
     setBedrooms('');
     setPriceRange([0, 50000000]);
     setAllowPets(false);
-    setFilters({});
-    triggerSearch();
+    resetSearch();
   };
 
   const hasActiveFilters = areaId || roomTypeId || bedrooms || priceRange[0] > 0 || priceRange[1] < 50000000 || allowPets;
@@ -215,25 +215,26 @@ export function MapSection() {
             </div>
 
             {/* Search + Reset Buttons */}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2 min-w-[140px]">
               <button
                 onClick={handleSearch}
-                className="flex-1 h-10 bg-teal-600 hover:bg-teal-700 active:scale-[0.97] text-white px-5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-sm font-medium shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-600/30"
+                className="flex-grow h-10 bg-teal-600 hover:bg-teal-700 active:scale-[0.97] text-white px-5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-sm font-medium shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-600/30"
                 id="search-submit-button"
               >
                 <Search size={16} />
-                <span>Tìm kiếm</span>
+                <span className="whitespace-nowrap">Tìm kiếm</span>
               </button>
-              {hasActiveFilters && (
+              
+              <div className={`flex transition-all duration-300 ease-in-out ${hasActiveFilters ? 'w-10 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
                 <button
                   onClick={handleReset}
-                  className="h-10 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-all duration-200"
+                  className="h-10 w-10 flex-shrink-0 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-all duration-200 flex items-center justify-center"
                   aria-label="Xóa bộ lọc"
                   title="Xóa bộ lọc"
                 >
                   <X size={16} />
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </div>
