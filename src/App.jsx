@@ -15,6 +15,7 @@ import ForgotPasswordResetPage from './pages/ForgotPasswordResetPage';
 import WaitingApprovalPage from './pages/WaitingApprovalPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import NotFoundPage from './pages/NotFoundPage';
 import { SearchProvider } from './context/SearchContext';
 
 
@@ -32,11 +33,14 @@ function Home() {
 
 function AppContent() {
   const location = useLocation();
+  const knownPaths = ['/', '/register', '/login', '/dashboard', '/forgot-password', '/waiting-approval'];
+  const isKnownPath = knownPaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/')) || location.pathname.startsWith('/property/');
   const isAuthPage =
     location.pathname === '/register' ||
     location.pathname === '/login' ||
     location.pathname === '/dashboard' ||
-    location.pathname.startsWith('/forgot-password');
+    location.pathname.startsWith('/forgot-password') ||
+    !isKnownPath;
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
@@ -56,6 +60,9 @@ function AppContent() {
         <Route element={<ProtectedRoute allowedRoles={['HOST', 'ADMIN']} />}>
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
+
+        {/* 404 Not Found - catch all */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isAuthPage && <Footer />}
     </div>
