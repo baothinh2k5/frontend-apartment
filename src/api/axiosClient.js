@@ -2,7 +2,7 @@ import axios from "axios";
 
 const normalizeBaseUrl = (baseUrl) => {
   if (!baseUrl) {
-    return "http://localhost:8080";
+    return "http://localhost:8080/";
   }
 
   return baseUrl.replace(/\/+$/, "");
