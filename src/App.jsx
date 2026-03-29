@@ -65,7 +65,7 @@ function AppContent() {
         <Route path="/forgot-password/confirmed" element={<ForgotPasswordConfirmedPage />} />
         <Route path="/forgot-password/reset" element={<ForgotPasswordResetPage />} />
         <Route path="/property/:id" element={<PropertyDetailsPage />} />
-        
+
         {/* Protected Dashboard Route */}
         <Route element={<ProtectedRoute allowedRoles={['HOST', 'ADMIN']} />}>
           <Route path="/dashboard" element={<Dashboard />} />

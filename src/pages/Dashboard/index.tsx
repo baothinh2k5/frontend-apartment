@@ -25,13 +25,9 @@ export default function Dashboard() {
   const userJson = localStorage.getItem("user");
   const user = userJson ? JSON.parse(userJson) : null;
   const isHost = user?.role?.code === "HOST";
-  const isAdmin = user?.role?.code === "ADMIN";
   const defaultPage = isHost ? "tin-dang-cua-toi" : "tong-quan";
   const requestedPage = searchParams.get("page");
-  
-  const allowedPages = isAdmin 
-    ? ["tong-quan", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host", "cai-dat"]
-    : ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "cai-dat"];
+  const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
 
   const [activePage, setActivePage] = useState(
     requestedPage && allowedPages.includes(requestedPage) ? requestedPage : defaultPage
@@ -92,7 +88,7 @@ export default function Dashboard() {
 
       {/* FAB - Chỉ hiện cho HOST hoặc nếu thích */}
       {isHost && (
-        <button 
+        <button
           onClick={() => setActivePage("dang-tin-moi")}
           className="fixed bottom-6 right-6 w-12 h-12 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 hover:scale-105 active:scale-95"
         >

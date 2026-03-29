@@ -59,16 +59,7 @@ axiosClient.interceptors.response.use(
     const status = error.response?.status;
     const originalRequest = config;
 
-    if (status === 403) {
-      console.warn("Detected 403 Forbidden error. Forcing logout due to access denial...");
-      localStorage.setItem("sessionExpired", "true");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      window.location.href = "/login";
-      return Promise.reject(error);
-    }
-
-    if (status === 401 && !originalRequest._retry) {
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token) => {
@@ -84,7 +75,7 @@ axiosClient.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
         isRefreshing = false;
-        // Redirect to login or clear data
+        // Neu khong co refresh token, chac chan la het han phien hoac chua login
         localStorage.setItem("sessionExpired", "true");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -109,6 +100,7 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
+        // Neu refresh token cung that bai -> Đăng xuất
         localStorage.setItem("sessionExpired", "true");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
