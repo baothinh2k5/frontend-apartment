@@ -3,21 +3,20 @@ name: Tự động đồng bộ sang Repo Vercel
 on:
   push:
     branches:
-      - main # Script chạy khi có code mới đẩy lên nhánh main của repo chính
+      - main 
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Lấy code mới nhất từ repo chính
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Đã nâng cấp lên v4 để sửa cảnh báo vàng
         with:
           fetch-depth: 0
 
       - name: Đẩy code sang Repo leaselinkconnect
         run: |
-          # Thêm repo phụ vào danh sách remote với token xác thực
           git remote add vercel-repo https://chishiya2309:${{ secrets.SYNC_TOKEN }}@github.com/chishiya2309/leaselinkconnect.git
           
-          # Đẩy toàn bộ code của nhánh main sang repo phụ
-          git push vercel-repo main
+          # Đã thêm --force để ép ghi đè repo phụ bằng code của repo chính
+          git push vercel-repo main --force
