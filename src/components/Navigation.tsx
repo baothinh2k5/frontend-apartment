@@ -1,15 +1,16 @@
 import { Home, Info, LogIn } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export function Navigation() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem("accessToken");
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   const navClassName = (path: string) =>
