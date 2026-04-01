@@ -59,7 +59,10 @@ axiosClient.interceptors.response.use(
     const status = error.response?.status;
     const originalRequest = config;
 
-    if ((status === 401 || status === 403) && !originalRequest._retry) {
+    const requestPath = originalRequest?.url ?? "";
+    const isPublicEndpoint = Array.from(PUBLIC_ENDPOINTS).some(endpoint => requestPath.includes(endpoint));
+
+    if ((status === 401 || status === 403) && !originalRequest._retry && !isPublicEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token) => {
