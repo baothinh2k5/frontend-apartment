@@ -85,7 +85,7 @@ export const AdminHostManagement = () => {
       if (debouncedQuery) params.query = debouncedQuery;
       if (statusFilter !== "ALL") params.status = statusFilter;
 
-      const res: any = await axiosClient.get("/api/v1/admin/hosts", { params });
+      const res: any = await axiosClient.get("/admin/hosts", { params });
       const pageResult: PageResult = res.data?.data ?? res.data ?? res;
       setHosts(pageResult.content ?? []);
       setTotalPages(pageResult.totalPages ?? 1);
@@ -111,7 +111,7 @@ export const AdminHostManagement = () => {
     setCreateSuccess("");
     setCreateLoading(true);
     try {
-      await axiosClient.post("/api/v1/admin/hosts", createForm);
+      await axiosClient.post("/admin/hosts", createForm);
       setCreateSuccess("Tạo tài khoản Host thành công! Email thông tin đăng nhập đã được gửi.");
       setCreateForm({ fullName: "", email: "", phone: "" });
       fetchHosts();
@@ -131,7 +131,7 @@ export const AdminHostManagement = () => {
     setLockError("");
     setLockLoading(true);
     try {
-      await axiosClient.patch(`/api/v1/admin/hosts/${lockTarget.id}/status`, {
+      await axiosClient.patch(`/admin/hosts/${lockTarget.id}/status`, {
         status: "LOCKED",
         reason: lockReason.trim() || "Vi phạm chính sách nền tảng",
       });
@@ -149,7 +149,7 @@ export const AdminHostManagement = () => {
   const handleSetActive = async (host: Host, actionLabel: string) => {
     if (!confirm(`${actionLabel} tài khoản "${host.fullName}"?`)) return;
     try {
-      await axiosClient.patch(`/api/v1/admin/hosts/${host.id}/status`, { status: "ACTIVE" });
+      await axiosClient.patch(`/admin/hosts/${host.id}/status`, { status: "ACTIVE" });
       fetchHosts();
     } catch (err) {
       console.error(err);

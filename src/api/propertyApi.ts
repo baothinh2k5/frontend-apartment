@@ -1,9 +1,9 @@
 import axiosClient from './axiosClient';
 
 const PROPERTY_ENDPOINTS = {
-  me: '/api/v1/properties/me',
-  approved: '/api/v1/properties/approved',
-  base: '/api/v1/properties'
+  me: '/properties/me',
+  approved: '/properties/approved',
+  base: '/properties'
 } as const;
 
 export const propertyApi = {
@@ -33,15 +33,11 @@ export const propertyApi = {
   },
 
   createProperty: async (formData: FormData) => {
-    return axiosClient.post(PROPERTY_ENDPOINTS.base, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return axiosClient.post(PROPERTY_ENDPOINTS.base, formData);
   },
 
   updateProperty: async (id: string, formData: FormData) => {
-    return axiosClient.put(`${PROPERTY_ENDPOINTS.base}/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return axiosClient.put(`${PROPERTY_ENDPOINTS.base}/${id}`, formData);
   },
 
   deleteProperty: async (id: string) => {
@@ -51,9 +47,9 @@ export const propertyApi = {
 
 export const lookupApi = {
   getAreas: async () => {
-    return axiosClient.get('/api/v1/areas');
+    return axiosClient.get('/areas');
   },
   getRoomTypes: async () => {
-    return axiosClient.get('/api/v1/room-types');
+    return axiosClient.get('/room-types');
   }
 };

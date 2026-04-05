@@ -43,7 +43,7 @@ export interface AiSearchResponse {
 
 export const searchWithAI = async (message: string): Promise<AiSearchResponse> => {
   try {
-    const response = await axiosClient.post<AiSearchResponse>('/api/v1/ai/search', {
+    const response = await axiosClient.post<AiSearchResponse>('/ai/search', {
       message: message
     });
     // axiosClient.js has an interceptor that already returns response.data

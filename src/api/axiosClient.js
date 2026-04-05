@@ -2,10 +2,11 @@ import axios from "axios";
 
 const normalizeBaseUrl = (baseUrl) => {
   if (!baseUrl) {
-    return "http://localhost:8080/";
+    return "http://localhost:8080/api/v1";
   }
 
-  return baseUrl.replace(/\/+$/, "");
+  const normalized = baseUrl.replace(/\/+$/, "");
+  return normalized.includes("/api/v1") ? normalized : `${normalized}/api/v1`;
 };
 
 const PUBLIC_ENDPOINTS = new Set(["/users/login", "/users/register"]);
@@ -13,15 +14,15 @@ const PUBLIC_ENDPOINTS = new Set(["/users/login", "/users/register"]);
 const axiosClient = axios.create({
   baseURL: normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL),
   timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 axiosClient.interceptors.request.use(
   (config) => {
     const requestPath = config.url ?? "";
     const accessToken = localStorage.getItem("accessToken");
+    const language = localStorage.getItem("i18nextLng") || "vi";
+
+    config.headers["Accept-Language"] = language;
 
     if (PUBLIC_ENDPOINTS.has(requestPath)) {
       if (config.headers?.Authorization) {
@@ -41,15 +42,27 @@ axiosClient.interceptors.request.use(
 );
 
 let isRefreshing = false;
-let refreshSubscribers = [];
+let isLoggingOut = false;
+let failedQueue = [];
 
-const subscribeTokenRefresh = (cb) => {
-  refreshSubscribers.push(cb);
+const handleLogout = () => {
+  if (isLoggingOut) return;
+  isLoggingOut = true;
+  localStorage.clear();
+  localStorage.setItem("sessionExpired", "true");
+  window.location.replace("/login");
 };
 
-const onRereshed = (token) => {
-  refreshSubscribers.map((cb) => cb(token));
-  refreshSubscribers = [];
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
 };
 
 axiosClient.interceptors.response.use(
@@ -62,14 +75,27 @@ axiosClient.interceptors.response.use(
     const requestPath = originalRequest?.url ?? "";
     const isPublicEndpoint = Array.from(PUBLIC_ENDPOINTS).some(endpoint => requestPath.includes(endpoint));
 
-    if ((status === 401 || status === 403) && !originalRequest._retry && !isPublicEndpoint) {
+    if (status === 401 && !isPublicEndpoint) {
+      if (isLoggingOut) return Promise.reject(error);
+
+      // Neu da retry roi ma van 401 -> Logout luon, tranh loop
+      if (originalRequest._retry) {
+        handleLogout();
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((token) => {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest._retry = true; // Danh dau da retry de khong refresh lai lan nua
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(axiosClient(originalRequest));
+            return axiosClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
           });
-        });
       }
 
       originalRequest._retry = true;
@@ -78,11 +104,7 @@ axiosClient.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
         isRefreshing = false;
-        // Neu khong co refresh token, chac chan la het han phien hoac chua login
-        localStorage.setItem("sessionExpired", "true");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        handleLogout();
         return Promise.reject(error);
       }
 
@@ -98,16 +120,13 @@ axiosClient.interceptors.response.use(
         localStorage.setItem("refreshToken", newRefreshToken);
 
         isRefreshing = false;
-        onRereshed(accessToken);
+        processQueue(null, accessToken);
 
         return axiosClient(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
-        // Neu refresh token cung that bai -> Đăng xuất
-        localStorage.setItem("sessionExpired", "true");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        processQueue(refreshError, null);
+        handleLogout();
         return Promise.reject(refreshError);
       }
     }

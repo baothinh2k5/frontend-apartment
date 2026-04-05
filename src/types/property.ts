@@ -21,4 +21,5 @@ export interface Property {
     avatar?: string;
     isSuperHost?: boolean;
   };
+  translations?: any[];
 }

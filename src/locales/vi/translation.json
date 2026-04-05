@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "home": "Trang Chủ",
+    "signIn": "Đăng Nhập",
+    "signUp": "Đăng Ký",
+    "dashboard": "Bảng Điều Khiển",
+    "logout": "Đăng Xuất",
+    "addProperty": "Thêm Tin Đăng"
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Đã có lỗi xảy ra",
+    "vietnamese": "Tiếng Việt",
+    "english": "Tiếng Anh",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh Sửa"
+  },
+  "property": {
+    "title": "Tiêu đề tin",
+    "description": "Mô tả",
+    "price": "Giá (VNĐ)",
+    "area": "Diện tích (m2)",
+    "address": "Địa chỉ",
+    "bedrooms": "Số phòng ngủ",
+    "petsAllowed": "Cho phép nuôi thú cưng",
+    "roomType": "Loại phòng",
+    "district": "Quận/Huyện"
+  }
+}

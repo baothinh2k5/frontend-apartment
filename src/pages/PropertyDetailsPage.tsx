@@ -29,10 +29,14 @@ import { PropertyCard } from '../components/PropertyCard';
 import { AiChatWidgetView } from '../components/AiSearch/AiChatWidgetView';
 import { propertyApi } from '../api/propertyApi';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { getLocalizedText } from '../utils/langUtils';
+import { toast } from 'sonner';
 
 export default function PropertyDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -59,17 +63,18 @@ export default function PropertyDetailsPage() {
           roomType: data.roomTypeName || 'Chưa xác định',
           area: data.areaM2 || 0,
           allowPets: data.allowPets || false,
-          availableFrom: 'Sẵn sàng',
+          availableFrom: t('property.available', 'Sẵn sàng'),
           images: data.images?.map((img: any) => img.imageUrl) || [],
           description: data.description || '',
+          translations: data.translations || [],
           amenities: [
-            { icon: Wifi, label: 'Wifi miễn phí' },
-            { icon: Wind, label: 'Điều hòa' },
-            { icon: Droplets, label: 'Nóng lạnh' },
-            { icon: Tv, label: 'TV' },
-            { icon: UtensilsCrossed, label: 'Bếp từ' },
-            { icon: Refrigerator, label: 'Tủ lạnh' },
-            ...(data.allowPets ? [{ icon: PawPrint, label: 'Cho phép thú cưng' }] : []),
+            { icon: Wifi, label: t('property.amenities_wifi', 'Wifi miễn phí') },
+            { icon: Wind, label: t('property.amenities_ac', 'Điều hòa') },
+            { icon: Droplets, label: t('property.amenities_heater', 'Nóng lạnh') },
+            { icon: Tv, label: t('property.amenities_tv', 'TV') },
+            { icon: UtensilsCrossed, label: t('property.amenities_kitchen', 'Bếp từ') },
+            { icon: Refrigerator, label: t('property.amenities_fridge', 'Tủ lạnh') },
+            ...(data.allowPets ? [{ icon: PawPrint, label: t('property.amenities_pets', 'Cho phép thú cưng') }] : []),
           ],
           landlord: {
             name: data.hostName || 'Chủ nhà',
@@ -130,14 +135,21 @@ export default function PropertyDetailsPage() {
             <div className="p-2 rounded-full group-hover:bg-primary/5 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </div>
-            <span>Quay lại</span>
+            <span>{t('common.back', 'Quay lại')}</span>
           </button>
           <div className="flex items-center gap-2">
-            <button className="p-2.5 rounded-full text-gray-600 hover:text-primary hover:bg-primary/5 transition-all">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success(t('property.linkCopied', 'Đã sao chép đường dẫn!'));
+              }}
+              title={t('property.share', 'Chia sẻ')}
+              className="p-2.5 rounded-full text-gray-600 hover:text-primary hover:bg-primary/5 transition-all"
+            >
               <Share2 className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-gray-100 mx-1"></div>
-            <p className="text-sm font-semibold text-primary">ID: {id || property.id}</p>
+            <p className="text-sm font-semibold text-primary">{t('common.id', 'Mã')}: {id || property.id}</p>
           </div>
         </div>
       </div>
@@ -164,7 +176,7 @@ export default function PropertyDetailsPage() {
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight mb-3">
-                  {property.title}
+                  {getLocalizedText(property.translations, 'title', i18n.language) || property.title}
                 </h1>
                 <div className="flex items-start gap-2 text-gray-500">
                   <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -178,44 +190,44 @@ export default function PropertyDetailsPage() {
                   <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <Home className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Loại phòng</p>
-                  <p className="text-sm font-bold text-gray-800 text-center line-clamp-1">{property.roomType}</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.roomType', 'Loại phòng')}</p>
+                  <p className="text-sm font-bold text-gray-800 text-center line-clamp-1">{t(`roomType.${property.roomType}`, property.roomType) as string}</p>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50/50 hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100 group">
                   <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <Maximize2 className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Diện tích</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.area', 'Diện tích')}</p>
                   <p className="text-lg font-bold text-gray-800">{property.area} m²</p>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50/50 hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100 group">
                   <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <Bed className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Phòng ngủ</p>
-                  <p className="text-lg font-bold text-gray-800">{property.bedrooms} PN</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.bedrooms', 'Phòng ngủ')}</p>
+                  <p className="text-lg font-bold text-gray-800">{property.bedrooms} {i18n.language?.startsWith('en') ? 'BD' : 'PN'}</p>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50/50 hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100 group">
                   <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <PawPrint className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Thú cưng</p>
-                  <p className="text-sm font-bold text-gray-800">{property.allowPets ? 'Cho phép' : 'Không cho phép'}</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.petsAllowed', 'Thú cưng')}</p>
+                  <p className="text-sm font-bold text-gray-800">{property.allowPets ? t('property.allowed', 'Cho phép') : t('property.notAllowed', 'Không cho phép')}</p>
                 </div>
               </div>
 
               {/* Description */}
               <div className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-900 pb-2 border-b-2 border-primary w-fit">Giới thiệu</h2>
+                <h2 className="text-xl font-bold text-gray-900 pb-2 border-b-2 border-primary w-fit">{t('property.description', 'Giới thiệu')}</h2>
                 <div className="text-gray-600 whitespace-pre-line leading-relaxed text-base">
-                  {property.description}
+                  {getLocalizedText(property.translations, 'description', i18n.language) || property.description}
                 </div>
               </div>
             </div>
 
             {/* Amenities Section */}
             <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Tiện ích căn hộ</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">{t('property.amenities', 'Tiện ích căn hộ')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {property.amenities.map((amenity: any, index: number) => {
                   const Icon = amenity.icon;
@@ -237,8 +249,8 @@ export default function PropertyDetailsPage() {
             {/* Location Section */}
             <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Vị trí địa lý</h2>
-                <span className="text-sm font-medium text-primary">Xem chi tiết</span>
+                <h2 className="text-xl font-bold text-gray-900">{t('property.location', 'Vị trí địa lý')}</h2>
+                <span className="text-sm font-medium text-primary">{t('property.viewDetails', 'Xem chi tiết')}</span>
               </div>
               <PropertyMapVietnamese address={property.location} />
             </div>
@@ -257,20 +269,20 @@ export default function PropertyDetailsPage() {
                     <p className="text-4xl font-extrabold text-primary tracking-tight">
                       {property.price.toLocaleString('vi-VN')} đ
                     </p>
-                    <p className="text-gray-400 font-semibold text-sm">/tháng</p>
+                    <p className="text-gray-400 font-semibold text-sm">{i18n.language?.startsWith('en') ? '/month' : '/tháng'}</p>
                   </div>
                 </div>
 
                 {/* Host Info */}
                 <div className="mb-8 space-y-4">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Thông tin chủ nhà</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">{t('property.hostInfo', 'Thông tin chủ nhà')}</p>
                   <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
                     <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-primary/20 shrink-0">
                       {property.landlord.name.charAt(0)}
                     </div>
                     <div className="min-w-0">
                       <p className="font-extrabold text-gray-900 truncate text-lg leading-tight">{property.landlord.name}</p>
-                      <p className="text-sm font-bold text-teal-600">Chủ sở hữu hệ thống</p>
+                      <p className="text-sm font-bold text-teal-600">{property.landlord.name === 'System Administrator' ? t('property.systemHost', 'Chủ sở hữu hệ thống') : t('property.systemHost', 'Chủ nhà')}</p>
                     </div>
                   </div>
                 </div>
@@ -278,7 +290,7 @@ export default function PropertyDetailsPage() {
                 {/* Main Actions */}
                 <div className="space-y-3">
                   <a
-                    href={`https://zalo.me/0793778529`}
+                    href={`https://zalo.me/0913968492`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] group"
@@ -287,13 +299,22 @@ export default function PropertyDetailsPage() {
                     <span className="text-lg">Zalo</span>
                   </a>
                   <a
-                    href={`https://api.whatsapp.com/qr/FM3NYOHE3LQEC1?autoload=1&app_absent=0&utm_campaign=zalo&utm_source=zalo`}
+                    href={`https://api.whatsapp.com/send/?phone=%2B84913968492&text&type=phone_number&app_absent=0`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full h-14 border-2 border-primary text-primary hover:bg-teal-50 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group"
                   >
                     <MessageSquare className="w-5 h-5 group-hover:animate-bounce" />
                     <span className="text-lg">WhatsApp</span>
+                  </a>
+                  <a
+                    href={`mailto:thinh29072002@gmail.com`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] group"
+                  >
+                    <Mail className="w-5 h-5 group-hover:animate-bounce" />
+                    <span className="text-lg">Gmail</span>
                   </a>
                 </div>
 
@@ -302,9 +323,9 @@ export default function PropertyDetailsPage() {
                   <div className="flex gap-3">
                     <Shield className="w-5 h-5 text-amber-600 shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-amber-700 uppercase tracking-tight mb-1">Cảnh báo an toàn</p>
+                      <p className="text-xs font-black text-amber-700 uppercase tracking-tight mb-1">{t('property.safetyWarning', 'Cảnh báo an toàn')}</p>
                       <p className="text-[10px] font-bold text-amber-800/80 leading-snug">
-                        Chỉ giao dịch cọc tiền sau khi xem phòng trực tiếp & ký hợp đồng.
+                        {t('property.safetyDesc', 'Chỉ giao dịch cọc tiền sau khi xem phòng trực tiếp & ký hợp đồng.')}
                       </p>
                     </div>
                   </div>

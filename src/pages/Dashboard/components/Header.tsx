@@ -46,7 +46,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const fetchNotifications = async () => {
     try {
       setLoadingNotifications(true);
-      const res: any = await axiosClient.get("/api/v1/notifications", {
+      const res: any = await axiosClient.get("/notifications", {
         params: { page: 0, size: 8 },
       });
 
@@ -100,7 +100,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const handleNotificationClick = async (notification: NotificationItem) => {
     try {
       if (!notification.isRead) {
-        await axiosClient.patch(`/api/v1/notifications/${notification.id}/read`);
+        await axiosClient.patch(`/notifications/${notification.id}/read`);
         setNotifications((prev) =>
           prev.map((item) => (item.id === notification.id ? { ...item, isRead: true } : item))
         );
@@ -116,7 +116,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axiosClient.patch("/api/v1/notifications/read-all");
+      await axiosClient.patch("/notifications/read-all");
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
       setUnreadCount(0);
     } catch (error) {

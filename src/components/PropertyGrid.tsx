@@ -3,6 +3,7 @@ import { PropertyCard } from './PropertyCard';
 import { ChevronLeft, ChevronRight, Loader2, SearchX } from 'lucide-react';
 import { propertyApi } from '../api/propertyApi';
 import { useSearch } from '../context/SearchContext';
+import { useTranslation } from 'react-i18next';
 
 const PROPERTIES_PER_PAGE = 8;
 
@@ -13,6 +14,7 @@ export function PropertyGrid() {
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const { t } = useTranslation();
   const { filters, searchVersion } = useSearch();
 
   // Reset to page 1 when a new search is triggered
@@ -61,10 +63,7 @@ export function PropertyGrid() {
           id: p.id,
           image: p.images?.find((img: any) => img.isThumbnail)?.imageUrl || p.images?.[0]?.imageUrl || '/placeholder-property.jpg',
           title: p.title,
-          price: new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-          }).format(p.monthlyPrice) + ' / tháng',
+          translations: p.translations || [],
           priceValue: p.monthlyPrice,
           location: p.areaName ? `${p.addressLine}, ${p.areaName}` : p.addressLine,
           beds: p.bedrooms || 0,
@@ -102,12 +101,12 @@ export function PropertyGrid() {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {searchVersion > 0 ? 'Kết quả tìm kiếm' : 'Bất động sản nổi bật'}
+            {searchVersion > 0 ? t('grid.searchResults', 'Kết quả tìm kiếm') : t('grid.featured', 'Bất động sản nổi bật')}
           </h2>
           <p className="text-gray-500">
             {searchVersion > 0
-              ? `Tìm thấy ${totalElements} bất động sản phù hợp`
-              : 'Khám phá các không gian sống tuyệt vời dành cho bạn'}
+              ? `${t('grid.found', 'Tìm thấy')} ${totalElements} ${t('grid.matchingProperties', 'bất động sản phù hợp')}`
+              : t('grid.discover', 'Khám phá các không gian sống tuyệt vời dành cho bạn')}
           </p>
         </div>
       </div>
@@ -121,8 +120,8 @@ export function PropertyGrid() {
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
             <SearchX size={48} className="mb-4" />
-            <p className="text-lg font-medium text-gray-500">Không tìm thấy bất động sản nào</p>
-            <p className="text-sm mt-1">Thử thay đổi bộ lọc tìm kiếm</p>
+            <p className="text-lg font-medium text-gray-500">{t('grid.noResults', 'Không tìm thấy bất động sản nào')}</p>
+            <p className="text-sm mt-1">{t('grid.tryDifferent', 'Thử thay đổi bộ lọc tìm kiếm')}</p>
           </div>
         )}
       </div>
@@ -134,7 +133,7 @@ export function PropertyGrid() {
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
             className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            aria-label="Trang trước"
+            aria-label={t('grid.prevPage', 'Trang trước')}
           >
             <ChevronLeft size={20} className="text-gray-600" />
           </button>
@@ -159,7 +158,7 @@ export function PropertyGrid() {
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
             className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            aria-label="Trang tiếp theo"
+            aria-label={t('grid.nextPage', 'Trang tiếp theo')}
           >
             <ChevronRight size={20} className="text-gray-600" />
           </button>

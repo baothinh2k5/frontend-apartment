@@ -24,8 +24,10 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const userJson = localStorage.getItem("user");
   const user = userJson ? JSON.parse(userJson) : null;
-  const isHost = user?.role?.code === "HOST";
-  const defaultPage = isHost ? "tin-dang-cua-toi" : "tong-quan";
+  const userRole = user?.role?.code?.toUpperCase();
+  const isAdmin = userRole === "ADMIN";
+  const isHost = userRole === "HOST";
+  const defaultPage = isAdmin ? "tong-quan" : "tin-dang-cua-toi";
   const requestedPage = searchParams.get("page");
   const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
 

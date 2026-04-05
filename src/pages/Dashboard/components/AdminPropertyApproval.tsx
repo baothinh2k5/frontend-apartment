@@ -32,7 +32,7 @@ export const AdminPropertyApproval = () => {
 
   const fetchPending = async () => {
     try {
-      const res: any = await axiosClient.get("/api/v1/properties/pending");
+      const res: any = await axiosClient.get("/properties/pending");
       setProperties(res.content || []);
     } catch (err) {
       console.error(err);
@@ -48,7 +48,7 @@ export const AdminPropertyApproval = () => {
   const handleApprove = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn duyệt tin này?")) return;
     try {
-      await axiosClient.post(`/api/v1/properties/${id}/approve`);
+      await axiosClient.post(`/properties/${id}/approve`);
       setProperties(properties.filter((p) => p.id !== id));
       setViewProperty(null);
     } catch (err) {
@@ -60,7 +60,7 @@ export const AdminPropertyApproval = () => {
   const handleReject = async () => {
     if (!rejectId || !rejectReason.trim()) return;
     try {
-      await axiosClient.post(`/api/v1/properties/${rejectId}/reject`, {
+      await axiosClient.post(`/properties/${rejectId}/reject`, {
         reason: rejectReason,
       });
       setProperties(properties.filter((p) => p.id !== rejectId));

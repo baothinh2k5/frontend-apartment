@@ -44,7 +44,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
       const params: any = { page, size: 10 };
       if (statusFilter) params.status = statusFilter;
 
-      const res: any = await axiosClient.get("/api/v1/properties", { params });
+      const res: any = await axiosClient.get("/properties", { params });
       setProperties(res.content || []);
       setTotalPages(res.totalPages || 0);
       setTotalElements(res.totalElements || 0);
@@ -62,7 +62,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn tin này khỏi hệ thống?")) return;
     try {
-      await axiosClient.delete(`/api/v1/properties/${id}`);
+      await axiosClient.delete(`/properties/${id}`);
       fetchAll();
       alert("Xóa thành công.");
     } catch (err) {
@@ -74,7 +74,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
   const handleApprove = async (id: string) => {
     if (!confirm("Xác nhận duyệt tin này?")) return;
     try {
-      await axiosClient.post(`/api/v1/properties/${id}/approve`);
+      await axiosClient.post(`/properties/${id}/approve`);
       fetchAll();
     } catch (err) {
       console.error(err);

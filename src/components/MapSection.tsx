@@ -2,6 +2,8 @@ import { Search, MapPin, Building2, BedDouble, DollarSign, PawPrint, X } from 'l
 import { useState, useEffect } from 'react';
 import { useSearch } from '../context/SearchContext';
 import { lookupApi } from '../api/propertyApi';
+import { useTranslation } from 'react-i18next';
+import { removeDiacritics } from '../utils/langUtils';
 import {
   Select,
   SelectContent,
@@ -24,6 +26,8 @@ export function MapSection() {
   const [bedrooms, setBedrooms] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000000]);
   const [allowPets, setAllowPets] = useState<boolean>(false);
+  
+  const { t, i18n } = useTranslation();
 
   const { 
     setFilters, 
@@ -71,7 +75,7 @@ export function MapSection() {
       {/* Google Map */}
       <div className="h-[700px] w-full">
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d122391.5026489793!2d108.11829!3d16.047079!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314219c792252a13%3A0x401da17e47aa3afc!2sDa%20Nang%2C%20Vietnam!5e0!3m2!1sen!2s!4v1234567890"
+          src="https://maps.google.com/maps?q=Hải%20Châu,%20Đà%20Nẵng&t=&z=13&ie=UTF8&iwloc=&output=embed"
           width="100%"
           height="100%"
           style={{ border: 0 }}
@@ -90,17 +94,19 @@ export function MapSection() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
                 <MapPin size={13} />
-                Vị trí
+                {t('search.location', 'Vị trí')}
               </label>
               <Select value={areaId} onValueChange={setAreaId}>
                 <SelectTrigger className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm" id="search-area-select">
-                  <SelectValue placeholder="Tất cả khu vực" />
+                  <SelectValue placeholder={t('search.allAreas', 'Tất cả khu vực')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả khu vực</SelectItem>
+                  <SelectItem value="all">{t('search.allAreas', 'Tất cả khu vực')}</SelectItem>
                   {areas.map((area) => (
                     <SelectItem key={area.id} value={String(area.id)}>
-                      {area.name}
+                      {i18n.language?.startsWith('en') 
+                        ? removeDiacritics(area.name)
+                        : area.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -111,17 +117,17 @@ export function MapSection() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
                 <Building2 size={13} />
-                Loại BĐS
+                {t('search.roomType', 'Loại BĐS')}
               </label>
               <Select value={roomTypeId} onValueChange={setRoomTypeId}>
                 <SelectTrigger className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm" id="search-roomtype-select">
-                  <SelectValue placeholder="Tất cả loại" />
+                  <SelectValue placeholder={t('search.allTypes', 'Tất cả loại')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả loại</SelectItem>
+                  <SelectItem value="all">{t('search.allTypes', 'Tất cả loại')}</SelectItem>
                   {roomTypes.map((rt) => (
                     <SelectItem key={rt.id} value={String(rt.id)}>
-                      {rt.name}
+                      {t(`roomType.${rt.name}`, rt.name) as string}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -132,19 +138,19 @@ export function MapSection() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
                 <BedDouble size={13} />
-                Phòng ngủ
+                {t('search.bedrooms', 'Phòng ngủ')}
               </label>
               <Select value={bedrooms} onValueChange={setBedrooms}>
                 <SelectTrigger className="h-10 rounded-lg bg-gray-50 border-gray-200 text-sm" id="search-bedrooms-select">
-                  <SelectValue placeholder="Tất cả" />
+                  <SelectValue placeholder={t('search.all', 'Tất cả')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="1">1 phòng</SelectItem>
-                  <SelectItem value="2">2 phòng</SelectItem>
-                  <SelectItem value="3">3 phòng</SelectItem>
-                  <SelectItem value="4">4 phòng</SelectItem>
-                  <SelectItem value="5">5+ phòng</SelectItem>
+                  <SelectItem value="all">{t('search.all', 'Tất cả')}</SelectItem>
+                  <SelectItem value="1">1 {t('search.rooms', 'phòng')}</SelectItem>
+                  <SelectItem value="2">2 {t('search.rooms', 'phòng')}</SelectItem>
+                  <SelectItem value="3">3 {t('search.rooms', 'phòng')}</SelectItem>
+                  <SelectItem value="4">4 {t('search.rooms', 'phòng')}</SelectItem>
+                  <SelectItem value="5">5+ {t('search.rooms', 'phòng')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -153,7 +159,7 @@ export function MapSection() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
                 <DollarSign size={13} />
-                Khoảng giá
+                {t('search.priceRange', 'Khoảng giá')}
               </label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -164,7 +170,7 @@ export function MapSection() {
                     <span className="text-gray-700 truncate">
                       {priceRange[0] > 0 || priceRange[1] < 50000000
                         ? `${formatPrice(priceRange[0])} — ${formatPrice(priceRange[1])}`
-                        : 'Tất cả mức giá'}
+                        : t('search.allPrices', 'Tất cả mức giá')}
                     </span>
                     <DollarSign size={14} className="text-gray-400 shrink-0" />
                   </button>
@@ -172,7 +178,7 @@ export function MapSection() {
                 <PopoverContent className="w-80 p-5" align="start">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <p className="text-sm font-medium text-gray-700">Mức giá hàng tháng</p>
+                      <p className="text-sm font-medium text-gray-700">{t('search.monthlyPrice', 'Mức giá hàng tháng')}</p>
                       <span className="text-xs text-teal-600 font-semibold bg-teal-50 px-2 py-0.5 rounded-md">
                         {formatPrice(priceRange[0])} — {formatPrice(priceRange[1])}
                       </span>
@@ -198,7 +204,7 @@ export function MapSection() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-1.5">
                 <PawPrint size={13} />
-                Thú cưng
+                {t('search.pets', 'Thú cưng')}
               </label>
               <button
                 onClick={() => setAllowPets(!allowPets)}
@@ -210,7 +216,7 @@ export function MapSection() {
                 id="search-allow-pets-toggle"
               >
                 <PawPrint size={16} className={allowPets ? 'text-teal-600' : 'text-gray-400'} />
-                <span>{allowPets ? 'Được phép' : 'Tất cả'}</span>
+                <span>{allowPets ? t('search.allowed', 'Được phép') : t('search.all', 'Tất cả')}</span>
               </button>
             </div>
 
@@ -222,15 +228,15 @@ export function MapSection() {
                 id="search-submit-button"
               >
                 <Search size={16} />
-                <span className="whitespace-nowrap">Tìm kiếm</span>
+                <span className="whitespace-nowrap">{t('search.searchBtn', 'Tìm kiếm')}</span>
               </button>
               
               <div className={`flex transition-all duration-300 ease-in-out ${hasActiveFilters ? 'w-10 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
                 <button
                   onClick={handleReset}
                   className="h-10 w-10 flex-shrink-0 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-all duration-200 flex items-center justify-center"
-                  aria-label="Xóa bộ lọc"
-                  title="Xóa bộ lọc"
+                  aria-label={t('search.clearFilters', 'Xóa bộ lọc')}
+                  title={t('search.clearFilters', 'Xóa bộ lọc')}
                 >
                   <X size={16} />
                 </button>

@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "Home",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "addProperty": "Add Property",
+    "about": "About Us"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "changeLanguage": "Change Language",
+    "id": "ID",
+    "notAvailable": "N/A"
+  },
+  "search": {
+    "location": "Location",
+    "allAreas": "All areas",
+    "roomType": "Room Type",
+    "allTypes": "All types",
+    "bedrooms": "Bedrooms",
+    "all": "All",
+    "rooms": "rooms",
+    "priceRange": "Price Range",
+    "allPrices": "All prices",
+    "monthlyPrice": "Monthly Price",
+    "pets": "Pets",
+    "allowed": "Allowed",
+    "searchBtn": "Search",
+    "clearFilters": "Clear filters"
+  },
+  "grid": {
+    "searchResults": "Search Results",
+    "featured": "Featured Properties",
+    "found": "Found",
+    "matchingProperties": "matching properties",
+    "discover": "Discover great living spaces for you",
+    "noResults": "No properties found",
+    "tryDifferent": "Try changing search filters",
+    "prevPage": "Previous page",
+    "nextPage": "Next page"
+  },
+  "footer": {
+    "aboutUs": "About Us",
+    "aboutDesc": "LeaseLink supports managing and finding rental properties in Da Nang with a clear experience for both Host and Admin.",
+    "links": "Links",
+    "home": "Home",
+    "registerHost": "Register Host",
+    "login": "Login",
+    "contact": "Contact",
+    "social": "Social Media"
+  },
+  "app": {
+    "sessionExpired": "Session expired. Please log in again."
+  },
+  "property": {
+    "title": "Property Title",
+    "description": "Property Description",
+    "price": "Price",
+    "area": "Area",
+    "address": "Address",
+    "bedrooms": "Bedrooms",
+    "petsAllowed": "Pets",
+    "roomType": "Room Type",
+    "district": "District",
+    "monthlyPrice": "Monthly Rent",
+    "amenities": "Amenities",
+    "hostInfo": "Host Information",
+    "viewDetails": "View Details",
+    "location": "Location",
+    "safetyWarning": "SAFETY WARNING",
+    "safetyDesc": "Do not transfer money before viewing the property and signing a contract.",
+    "systemHost": "System Administrator",
+    "available": "Available",
+    "notAllowed": "Not Allowed",
+    "allowed": "Allowed",
+    "amenities_wifi": "Free Wifi",
+    "amenities_ac": "Air Conditioning",
+    "amenities_heater": "Water Heater",
+    "amenities_tv": "TV",
+    "amenities_kitchen": "Kitchen",
+    "amenities_pets": "Pets Allowed"
+  },
+  "roomType": {
+    "Nhà nguyên căn": "House",
+    "Căn hộ mini": "Apartment",
+    "Chung cư": "Condominium"
+  },
+  "ai": {
+    "assistant": "AI Assistant",
+    "subtitle": "Suggesting properties based on your needs",
+    "describeStart": "You can describe your needs naturally",
+    "describeDetails": "For example: area, price, bedrooms, pets allowed, or specific wishes like near the beach, balcony, or fully furnished.",
+    "placeholder": "Describe your rental needs..."
+  }
+}

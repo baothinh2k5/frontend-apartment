@@ -2,14 +2,22 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Send, Sparkles, X, Loader2, ExternalLink } from 'lucide-react';
 import { searchWithAI, AiSearchResponse, Property } from '../../api/aiQueryService';
+import { useTranslation } from 'react-i18next';
 
 const CHAT_STORAGE_KEY = 'leaselink_ai_chat';
 
-const MASCOT_MESSAGES = [
+const initialMascotMessagesVi = [
   'Xin chào bạn! Mình là trợ lý AI của LeaseLink, sẵn sàng hỗ trợ tìm nhà theo nhu cầu của bạn.',
   'Bạn chỉ cần mô tả tự nhiên như khu vực, giá, số phòng ngủ hay mong muốn riêng, mình sẽ gợi ý giúp bạn.',
   'Mình có thể hỗ trợ tìm căn hộ, phòng trọ hoặc nơi ở gần biển, yên tĩnh, đầy đủ nội thất.',
   'Thử nhắn như “Căn hộ 1 phòng ngủ ở Hải Châu, yên tĩnh” để mình tìm nhanh cho bạn nhé.',
+];
+
+const initialMascotMessagesEn = [
+  'Hello! I am LeaseLink AI assistant, ready to help you find a home.',
+  'Just describe your needs naturally like area, price, or specific wishes.',
+  'I can help you find an apartment, room, or a place near the beach.',
+  'Try typing “1 bedroom apartment in Hai Chau, quiet” and I will find it.',
 ];
 
 function AiPropertyCard({ property, onNavigate }: { property: Property; onNavigate: (propertyId: string) => void }) {
@@ -73,6 +81,7 @@ function MascotLauncher({
   message: string;
   isMessageVisible: boolean;
 }) {
+  const { t, i18n } = useTranslation();
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {visible && (
@@ -114,7 +123,7 @@ function MascotLauncher({
           </div>
         </div>
         <span className="-mt-1 rounded-full bg-amber-400 px-3 py-1 text-[11px] font-semibold text-amber-950 shadow-sm">
-          Trợ lý AI
+          {t('ai.assistant', 'Trợ lý AI')}
         </span>
       </button>
     </div>
@@ -134,6 +143,9 @@ export function AiChatWidgetView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { t, i18n } = useTranslation();
+  const MASCOT_MESSAGES = i18n.language?.startsWith('en') ? initialMascotMessagesEn : initialMascotMessagesVi;
 
   // --- Session persistence ---
   const saveChatState = useCallback(() => {
@@ -230,10 +242,17 @@ export function AiChatWidgetView() {
     }
   };
 
-  const chips = [
+  const chipsVi = [
     "Căn hộ gần biển, full nội thất, có cửa sổ và ban công",
     "Căn hộ 2 phòng ngủ, rộng rãi, gần nhà hàng, quán cà phê"
   ];
+
+  const chipsEn = [
+    "Apartment near the beach, fully furnished, balcony",
+    "Spacious 2-bedroom apartment near cafes"
+  ];
+
+  const chips = i18n.language?.startsWith('en') ? chipsEn : chipsVi;
 
   if (!isOpen) {
     return (
@@ -261,7 +280,7 @@ export function AiChatWidgetView() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-800">LeaseLink AI</h3>
-                <p className="text-xs text-slate-500">Gợi ý bất động sản theo nhu cầu của bạn</p>
+                <p className="text-xs text-slate-500">{t('ai.subtitle', 'Gợi ý bất động sản theo nhu cầu của bạn')}</p>
               </div>
             </div>
             <button
@@ -278,10 +297,10 @@ export function AiChatWidgetView() {
             <div className="rounded-3xl border border-teal-100 bg-gradient-to-br from-white to-teal-50 p-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2 text-teal-700">
                 <MessageCircle size={16} />
-                <span className="text-sm font-semibold">Bạn có thể mô tả nhu cầu tự nhiên</span>
+                <span className="text-sm font-semibold">{t('ai.describeStart', 'Bạn có thể mô tả nhu cầu tự nhiên')}</span>
               </div>
               <p className="text-sm leading-6 text-slate-600">
-                Ví dụ như khu vực, mức giá, số phòng ngủ, có nuôi thú cưng hay những mong muốn như gần biển, có ban công hoặc đầy đủ nội thất.
+                {t('ai.describeDetails', 'Ví dụ như khu vực, mức giá, số phòng ngủ, có nuôi thú cưng hay những mong muốn như gần biển, có ban công hoặc đầy đủ nội thất.')}
               </p>
               <div className="mt-4 flex flex-col gap-2">
                 {chips.map((chip, i) => (
@@ -343,7 +362,7 @@ export function AiChatWidgetView() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               disabled={isLoading}
-              placeholder="Mô tả nhu cầu thuê nhà của bạn..."
+              placeholder={t('ai.placeholder', 'Mô tả nhu cầu thuê nhà của bạn...')}
               className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-100 disabled:opacity-50"
             />
             <button

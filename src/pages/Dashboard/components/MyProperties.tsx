@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Eye, X, Shield, Check, MessageSquare } from "lucide-react";
 import { propertyApi } from "../../../api/propertyApi";
+import { useTranslation } from "react-i18next";
+import { getLocalizedText } from "../../../utils/langUtils";
 
 const StatItem = ({ label, value }: { label: string; value: any }) => (
   <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
@@ -22,6 +24,7 @@ interface MyPropertiesProps {
 }
 
 export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
+  const { i18n } = useTranslation();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProperty, setViewProperty] = useState<any | null>(null);
@@ -110,7 +113,9 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                       )}
                     </td>
                     <td className="py-3 px-4 max-w-xs">
-                      <div className="font-semibold text-gray-800 line-clamp-1">{p.title}</div>
+                      <div className="font-semibold text-gray-800 line-clamp-1">
+                        {getLocalizedText(p.translations, 'title', i18n.language) || p.title}
+                      </div>
                       <div className="text-xs text-gray-500 line-clamp-1 mt-0.5">{p.addressLine}</div>
                     </td>
                     <td className="py-3 px-4">
@@ -210,7 +215,9 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                     }`}>
                       {viewProperty.status}
                     </span>
-                    <h4 className="text-2xl font-bold text-gray-900 mt-2">{viewProperty.title}</h4>
+                    <h4 className="text-2xl font-bold text-gray-900 mt-2">
+                        {getLocalizedText(viewProperty.translations, 'title', i18n.language) || viewProperty.title}
+                    </h4>
                     <p className="text-gray-500 text-sm mt-1">{viewProperty.addressLine}</p>
                   </div>
                   
@@ -228,11 +235,10 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                     <StatItem label="Thú cưng" value={viewProperty.allowPets ? "Có" : "Không"} />
                   </div>
 
-                  {/* Description Section */}
                   <div className="pt-6 border-t border-gray-100">
                     <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-3">Mô tả chi tiết</h5>
                     <div className="bg-gray-50/80 p-4 rounded-xl text-sm text-gray-600 leading-relaxed whitespace-pre-wrap border border-gray-100/50 italic">
-                      {viewProperty.description || "Không có mô tả chi tiết từ bạn."}
+                      {getLocalizedText(viewProperty.translations, 'description', i18n.language) || viewProperty.description || "Không có mô tả chi tiết từ bạn."}
                     </div>
                   </div>
 
