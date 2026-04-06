@@ -22,6 +22,8 @@ export const propertyApi = {
     maxPrice?: number;
     bedrooms?: number;
     allowPets?: boolean;
+    keyword?: string;
+    amenityIds?: string[];
     page?: number;
     size?: number;
   }) => {

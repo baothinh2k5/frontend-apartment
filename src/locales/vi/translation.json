@@ -28,5 +28,23 @@
     "petsAllowed": "Cho phép nuôi thú cưng",
     "roomType": "Loại phòng",
     "district": "Quận/Huyện"
+  },
+  "search": {
+    "location": "Vị trí",
+    "allAreas": "Tất cả khu vực",
+    "roomType": "Loại BĐS",
+    "allTypes": "Tất cả loại",
+    "bedrooms": "Phòng ngủ",
+    "all": "Tất cả",
+    "rooms": "phòng",
+    "priceRange": "Khoảng giá",
+    "monthlyPrice": "Mức giá",
+    "pets": "Thú cưng",
+    "any": "Tất cả",
+    "allowed": "Cho phép",
+    "notAllowed": "Không cho phép",
+    "flexible": "Thỏa thuận",
+    "searchBtn": "Tìm kiếm",
+    "clearFilters": "Xóa bộ lọc"
   }
 }

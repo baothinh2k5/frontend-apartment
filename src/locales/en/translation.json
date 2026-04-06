@@ -32,7 +32,10 @@
     "allPrices": "All prices",
     "monthlyPrice": "Monthly Price",
     "pets": "Pets",
+    "any": "Any",
     "allowed": "Allowed",
+    "notAllowed": "Not Allowed",
+    "flexible": "Flexible",
     "searchBtn": "Search",
     "clearFilters": "Clear filters"
   },
@@ -90,7 +93,9 @@
   },
   "roomType": {
     "Nhà nguyên căn": "House",
+    "Căn hộ": "Apartment",
     "Căn hộ mini": "Apartment",
+
     "Chung cư": "Condominium"
   },
   "ai": {

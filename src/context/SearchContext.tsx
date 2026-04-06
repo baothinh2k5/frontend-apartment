@@ -7,7 +7,9 @@ export interface SearchFilters {
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;
-  allowPets?: boolean;
+  allowPets?: string;
+  keyword?: string;
+  amenityIds?: string[];
 }
 
 interface LookupItem {
