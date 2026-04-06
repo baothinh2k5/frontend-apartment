@@ -28,6 +28,7 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProperty, setViewProperty] = useState<any | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchProperties = async () => {
     try {
@@ -35,6 +36,7 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
       const res: any = await propertyApi.getMyProperties(0, 50);
       if (res && res.content) {
         setProperties(res.content);
+        setSelectedIds(new Set()); // Reset selection
       } else {
         setProperties([]);
       }
@@ -49,8 +51,23 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
     fetchProperties();
   }, []);
 
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === properties.length && properties.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(properties.map(p => p.id)));
+    }
+  };
+
   const handleDelete = async (id: string) => {
-    if (window.confirm("Bác có chắc chắn muốn xóa bài đăng này?")) {
+    if (window.confirm("Bác có chắc chắn muốn XÓA VĨNH VIỄN bài đăng này? (Dữ liệu sẽ mất hẳn và không thể khôi phục)")) {
       try {
         await propertyApi.deleteProperty(id);
         fetchProperties();
@@ -61,8 +78,42 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(`Bác có chắc chắn muốn XÓA VĨNH VIỄN ${selectedIds.size} tin đã chọn?`)) {
+      try {
+        await propertyApi.bulkDelete(Array.from(selectedIds));
+        fetchProperties();
+      } catch (err) {
+        console.error(err);
+        alert("Xóa hàng loạt thất bại");
+      }
+    }
+  };
+
+  const handleBulkHide = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await propertyApi.bulkHide(Array.from(selectedIds));
+      fetchProperties();
+    } catch (err) {
+      console.error(err);
+      alert("Ẩn hàng loạt thất bại");
+    }
+  };
+
+  const handleToggleHide = async (id: string) => {
+    try {
+      await propertyApi.toggleHide(id);
+      fetchProperties();
+    } catch (err) {
+      console.error(err);
+      alert("Cập nhật trạng thái thất bại");
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-sm p-6 relative">
+    <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-sm p-6 relative min-h-[500px]">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">Tin Đăng Của Tôi</h2>
         <button
@@ -84,84 +135,108 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
           Chưa có bài đăng nào. Hãy thử Đăng tin mới!
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-100">
+        <div className="overflow-x-auto rounded-lg border border-gray-100 mb-20">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead className="bg-gray-50/80">
               <tr className="border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
+                <th className="py-3 px-4 font-semibold w-10">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                    checked={properties.length > 0 && selectedIds.size === properties.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="py-3 px-4 font-semibold w-24">Hình ảnh</th>
                 <th className="py-3 px-4 font-semibold">Tài sản & Địa chỉ</th>
                 <th className="py-3 px-4 font-semibold">Loại & Khu vực</th>
-                <th className="py-3 px-4 font-semibold">Giá / Tháng</th>
-                <th className="py-3 px-4 font-semibold">Trạng thái</th>
-                <th className="py-3 px-4 font-semibold">Tác vụ</th>
+                <th className="py-3 px-4 font-semibold text-right">Giá thuê</th>
+                <th className="py-3 px-4 font-semibold text-center">Trạng thái</th>
+                <th className="py-3 px-4 font-semibold text-right">Tác vụ</th>
               </tr>
             </thead>
             <tbody>
               {properties.map((p) => {
                 const thumb = p.images?.find((img: any) => img.isThumbnail) || p.images?.[0];
+                const isHidden = p.status === "HIDDEN";
                 return (
-                  <tr key={p.id} className="border-b border-gray-100 hover:bg-teal-50/30 transition-colors">
+                  <tr key={p.id} className={`border-b border-gray-100 hover:bg-teal-50/30 transition-colors ${selectedIds.has(p.id) ? 'bg-teal-50/50' : ''}`}>
+                    <td className="py-3 px-4">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                        checked={selectedIds.has(p.id)}
+                        onChange={() => toggleSelect(p.id)}
+                      />
+                    </td>
                     <td className="py-3 px-4">
                       {thumb ? (
                         <div className="w-16 h-12 rounded-md overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
                           <img src={thumb.imageUrl} alt="thumb" className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <div className="w-16 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs">
+                        <div className="w-16 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs text-center">
                           No Img
                         </div>
                       )}
                     </td>
                     <td className="py-3 px-4 max-w-xs">
-                      <div className="font-semibold text-gray-800 line-clamp-1">
+                      <div className={`font-semibold text-gray-800 line-clamp-1 ${isHidden ? 'opacity-50 italic' : ''}`}>
                         {getLocalizedText(p.translations, 'title', i18n.language) || p.title}
                       </div>
-                      <div className="text-xs text-gray-500 line-clamp-1 mt-0.5">{p.addressLine}</div>
+                      <div className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{p.addressLine}</div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-sm font-medium text-gray-700">{p.roomTypeName}</div>
-                      <div className="text-[11px] text-teal-600 mt-0.5">{p.areaName}</div>
+                      <div className="text-[10px] text-teal-600 font-bold uppercase tracking-tighter mt-0.5">{p.areaName}</div>
                     </td>
-                    <td className="py-3 px-4 font-semibold text-teal-600">
+                    <td className="py-3 px-4 text-right font-bold text-teal-600 font-mono text-sm">
                       {p.monthlyPrice?.toLocaleString()} đ
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex flex-col gap-1">
-                        <span className={`px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full w-fit ${
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full w-fit ${
                           p.status === "PENDING" ? "bg-amber-100 text-amber-700" :
                           p.status === "REJECTED" ? "bg-red-100 text-red-700" :
-                          p.status === "DELETED" ? "bg-gray-100 text-gray-500" :
+                          p.status === "HIDDEN" ? "bg-gray-200 text-gray-600" :
                           "bg-green-100 text-green-700"
                         }`}>
                           {p.status}
                         </span>
                         {p.status === "REJECTED" && p.rejectedReason && (
-                          <div className="text-[10px] text-red-500 italic max-w-[150px] line-clamp-2" title={p.rejectedReason}>
+                          <div className="text-[10px] text-red-500 italic max-w-[150px] line-clamp-1 text-center" title={p.rejectedReason}>
                             Lý do: {p.rejectedReason}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <button 
                           onClick={() => setViewProperty(p)}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-md hover:bg-blue-100 transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg hover:bg-blue-100 transition-colors"
                           title="Xem chi tiết"
                         >
                           <Eye size={16} />
                         </button>
                         <button 
+                          onClick={() => handleToggleHide(p.id)}
+                          className={`p-1.5 rounded-lg transition-colors ${isHidden ? 'text-gray-400 hover:text-green-600 bg-gray-50 hover:bg-green-100' : 'text-gray-400 hover:text-amber-600 bg-gray-50 hover:bg-amber-100'}`}
+                          title={isHidden ? "Hiện bài" : "Ẩn bài"}
+                        >
+                          {isHidden ? <Check size={16} /> : <Shield size={16} />}
+                        </button>
+                        <button 
                           onClick={() => onEdit(p)}
-                          className="p-1.5 text-gray-400 hover:text-teal-600 bg-gray-50 rounded-md hover:bg-teal-100 transition-colors"
+                          className="p-1.5 text-gray-400 hover:text-teal-600 bg-gray-50 rounded-lg hover:bg-teal-100 transition-colors"
                           title="Chỉnh sửa"
                         >
                           <Edit size={16} />
                         </button>
                         <button 
                           onClick={() => handleDelete(p.id)}
-                          className="p-1.5 text-gray-400 hover:text-rose-600 bg-gray-50 rounded-md hover:bg-rose-100 transition-colors"
-                          title="Xóa bài"
+                          className="p-1.5 text-gray-400 hover:text-rose-600 bg-gray-50 rounded-lg hover:bg-rose-100 transition-colors"
+                          title="Xóa vĩnh viễn"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -172,6 +247,39 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="absolute bottom-6 left-6 right-6 bg-white border border-gray-200 p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-bottom duration-300 z-50 ring-4 ring-teal-500/10">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-teal-500 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-teal-200">
+              {selectedIds.size}
+            </div>
+            <div>
+              <div className="text-sm font-bold text-gray-800">Đã chọn {selectedIds.size} tin đăng</div>
+              <button 
+                onClick={() => setSelectedIds(new Set())}
+                className="text-[11px] text-gray-400 hover:text-gray-600 underline">
+                Bỏ chọn tất cả
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleBulkHide}
+              className="px-4 py-2 border-2 border-amber-500 text-amber-600 rounded-xl text-sm font-bold hover:bg-amber-50 transition-all active:scale-95 flex items-center gap-2">
+              <Shield size={16} />
+              Ẩn nhanh
+            </button>
+            <button 
+              onClick={handleBulkDelete}
+              className="px-4 py-2 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-sm font-bold hover:from-rose-600 hover:to-red-700 transition-all shadow-lg shadow-rose-100 active:scale-95 flex items-center gap-2">
+              <Trash2 size={16} />
+              Xóa vĩnh viễn
+            </button>
+          </div>
         </div>
       )}
 
@@ -195,7 +303,7 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                     {viewProperty.images?.[0] ? (
                       <img src={viewProperty.images[0].imageUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 italic">Không có hình ảnh</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 italic text-sm">Không có hình ảnh</div>
                     )}
                   </div>
                   <div className="grid grid-cols-4 gap-2">
@@ -218,13 +326,13 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                     <h4 className="text-2xl font-bold text-gray-900 mt-2">
                         {getLocalizedText(viewProperty.translations, 'title', i18n.language) || viewProperty.title}
                     </h4>
-                    <p className="text-gray-500 text-sm mt-1">{viewProperty.addressLine}</p>
+                    <p className="text-gray-500 text-sm mt-1 line-clamp-2">{viewProperty.addressLine}</p>
                   </div>
                   
                   <div className="p-4 bg-teal-50 rounded-xl border border-teal-100">
-                    <div className="text-xs text-teal-600 font-medium">Giá thuê hàng tháng</div>
-                    <div className="text-2xl font-extrabold text-teal-700">
-                      {viewProperty.monthlyPrice?.toLocaleString()} VNĐ
+                    <div className="text-[10px] text-teal-600 font-bold uppercase tracking-wider mb-1">Giá thuê hàng tháng</div>
+                    <div className="text-2xl font-extrabold text-teal-700 font-mono">
+                      {viewProperty.monthlyPrice?.toLocaleString()} đ
                     </div>
                   </div>
                   
@@ -234,33 +342,26 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                     <StatItem label="Loại phòng" value={viewProperty.roomTypeName} />
                     <StatItem label="Thú cưng" value={viewProperty.allowPets ? "Có" : "Không"} />
                   </div>
-
-                  <div className="pt-6 border-t border-gray-100">
-                    <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-3">Mô tả chi tiết</h5>
-                    <div className="bg-gray-50/80 p-4 rounded-xl text-sm text-gray-600 leading-relaxed whitespace-pre-wrap border border-gray-100/50 italic">
-                      {getLocalizedText(viewProperty.translations, 'description', i18n.language) || viewProperty.description || "Không có mô tả chi tiết từ bạn."}
-                    </div>
-                  </div>
-
-                  {/* Amenities (Derived) */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-3">Tiện ích cơ bản</h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      <AmenityItem icon={MessageSquare} label="Wifi miễn phí" />
-                      <AmenityItem icon={Check} label="Điều hòa" />
-                      {viewProperty.allowPets && <AmenityItem icon={Plus} label="Cho thú cưng" />}
-                    </div>
-                  </div>
                 </div>
               </div>
 
               {/* Rejected Reason */}
               {viewProperty.status === "REJECTED" && viewProperty.rejectedReason && (
-                <div className="bg-red-50 p-4 rounded-xl border border-red-100 mt-6">
-                  <h5 className="font-bold text-xs uppercase tracking-wider text-red-400 mb-2">Lý do từ chối từ quản trị viên</h5>
-                  <p className="text-sm text-red-600">{viewProperty.rejectedReason}</p>
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 flex gap-3">
+                   <div className="w-1.5 bg-red-400 rounded-full h-auto"></div>
+                   <div>
+                    <h5 className="font-bold text-[10px] uppercase tracking-wider text-red-500 mb-1">Lý do từ chối từ quản trị viên</h5>
+                    <p className="text-sm text-red-600 italic leading-relaxed">"{viewProperty.rejectedReason}"</p>
+                   </div>
                 </div>
               )}
+              
+              <div className="pt-6 border-t border-gray-100">
+                <h5 className="font-bold text-xs uppercase tracking-wider text-gray-400 mb-3">Mô tả chi tiết</h5>
+                <div className="bg-gray-50/80 p-5 rounded-2xl text-sm text-gray-600 leading-relaxed whitespace-pre-wrap border border-gray-100/50 italic min-h-[100px]">
+                  {getLocalizedText(viewProperty.translations, 'description', i18n.language) || viewProperty.description || "Không có mô tả chi tiết từ bạn."}
+                </div>
+              </div>
             </div>
             
             <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex gap-3">
@@ -269,12 +370,12 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                   onEdit(viewProperty);
                   setViewProperty(null);
                 }}
-                className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-all shadow-md active:scale-95">
+                className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-all shadow-md active:scale-95 text-sm">
                 Chỉnh sửa tin này
               </button>
               <button 
                 onClick={() => setViewProperty(null)}
-                className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all active:scale-95">
+                className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all active:scale-95 text-sm">
                 Đóng
               </button>
             </div>

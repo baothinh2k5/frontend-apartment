@@ -29,11 +29,13 @@ export const AdminPropertyApproval = () => {
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [viewProperty, setViewProperty] = useState<Property | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchPending = async () => {
     try {
       const res: any = await axiosClient.get("/properties/pending");
       setProperties(res.content || []);
+      setSelectedIds(new Set()); // Reset selection on fetch
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,11 +47,63 @@ export const AdminPropertyApproval = () => {
     fetchPending();
   }, []);
 
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === properties.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(properties.map(p => p.id)));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Bạn có chắc chắn muốn duyệt ${selectedIds.size} tin này?`)) return;
+    try {
+      await axiosClient.post("/properties/bulk-approve", {
+        ids: Array.from(selectedIds)
+      });
+      setProperties(properties.filter(p => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+    } catch (err) {
+      console.error(err);
+      alert("Duyệt hàng loạt thất bại.");
+    }
+  };
+
+  const handleBulkReject = async (reason: string) => {
+    if (selectedIds.size === 0) return;
+    try {
+      await axiosClient.post("/properties/bulk-reject", {
+        ids: Array.from(selectedIds),
+        reason
+      });
+      setProperties(properties.filter(p => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+      setRejectId(null);
+      setRejectReason("");
+    } catch (err) {
+      console.error(err);
+      alert("Từ chối hàng loạt thất bại.");
+    }
+  };
+
   const handleApprove = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn duyệt tin này?")) return;
     try {
       await axiosClient.post(`/properties/${id}/approve`);
       setProperties(properties.filter((p) => p.id !== id));
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       setViewProperty(null);
     } catch (err) {
       console.error(err);
@@ -58,12 +112,24 @@ export const AdminPropertyApproval = () => {
   };
 
   const handleReject = async () => {
-    if (!rejectId || !rejectReason.trim()) return;
+    if (!rejectReason.trim()) return;
+    
+    if (rejectId === "bulk") {
+      await handleBulkReject(rejectReason);
+      return;
+    }
+
+    if (!rejectId) return;
     try {
       await axiosClient.post(`/properties/${rejectId}/reject`, {
         reason: rejectReason,
       });
       setProperties(properties.filter((p) => p.id !== rejectId));
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(rejectId);
+        return next;
+      });
       setRejectId(null);
       setRejectReason("");
     } catch (err) {
@@ -79,11 +145,19 @@ export const AdminPropertyApproval = () => {
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[400px]">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
+              <th className="px-4 py-4 w-10">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                  checked={properties.length > 0 && selectedIds.size === properties.length}
+                  onChange={toggleSelectAll}
+                />
+              </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tin đăng</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Người đăng</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Giá thuê</th>
@@ -94,13 +168,21 @@ export const AdminPropertyApproval = () => {
           <tbody className="divide-y divide-gray-100 text-sm">
             {properties.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-gray-500 italic">
+                <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
                   Không có tin đăng nào đang chờ duyệt.
                 </td>
               </tr>
             ) : (
               properties.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${selectedIds.has(p.id) ? 'bg-teal-50/30' : ''}`}>
+                  <td className="px-4 py-4">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                      checked={selectedIds.has(p.id)}
+                      onChange={() => toggleSelect(p.id)}
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900 line-clamp-1">{p.title}</div>
                     <div className="text-xs text-gray-500">{p.areaName} • {p.roomTypeName}</div>
@@ -135,6 +217,34 @@ export const AdminPropertyApproval = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] flex items-center justify-between animate-in slide-in-from-bottom duration-300 z-50">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">
+              Đã chọn <span className="text-teal-600 font-bold">{selectedIds.size}</span> tin đăng
+            </span>
+            <button 
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-gray-500 hover:text-gray-700 underline">
+              Bỏ chọn tất cả
+            </button>
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setRejectId("bulk")}
+              className="px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors">
+              Từ chối hàng loạt
+            </button>
+            <button 
+              onClick={handleBulkApprove}
+              className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-bold hover:bg-teal-600 transition-colors shadow-md shadow-teal-100">
+              Duyệt nhanh ({selectedIds.size})
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal xem chi tiết */}
       {viewProperty && (

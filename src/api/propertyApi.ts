@@ -42,6 +42,26 @@ export const propertyApi = {
 
   deleteProperty: async (id: string) => {
     return axiosClient.delete(`${PROPERTY_ENDPOINTS.base}/${id}`);
+  },
+
+  bulkApprove: async (ids: string[]) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/bulk-approve`, { ids });
+  },
+
+  bulkReject: async (ids: string[], reason: string) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/bulk-reject`, { ids, reason });
+  },
+
+  bulkDelete: async (ids: string[]) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/bulk-delete`, { ids });
+  },
+
+  bulkHide: async (ids: string[]) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/bulk-hide`, { ids });
+  },
+
+  toggleHide: async (id: string) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/${id}/toggle-hide`);
   }
 };
 

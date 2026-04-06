@@ -23,6 +23,7 @@
     "price": "Giá (VNĐ)",
     "area": "Diện tích (m2)",
     "address": "Địa chỉ",
+    "hostInfo": "Thông tin liên hệ",
     "bedrooms": "Số phòng ngủ",
     "petsAllowed": "Cho phép nuôi thú cưng",
     "roomType": "Loại phòng",

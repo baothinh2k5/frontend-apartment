@@ -22,6 +22,12 @@ import {
   ArrowLeft,
   MessageCircle,
   MessageSquare,
+  Waves,
+  Dumbbell,
+  Car,
+  ArrowUpCircle,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 import { PropertyGallery } from '../components/PropertyDetail/PropertyGallery';
 import { PropertyMapVietnamese } from '../components/PropertyDetail/PropertyMapVietnamese';
@@ -32,6 +38,43 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedText } from '../utils/langUtils';
 import { toast } from 'sonner';
+
+const IconMap: Record<string, any> = {
+  'Wifi': Wifi,
+  'Wind': Wind,
+  'AirConditioning': Wind,
+  'Shield': Shield,
+  'Droplets': Droplets,
+  'Tv': Tv,
+  'Tivi': Tv,
+  'UtensilsCrossed': UtensilsCrossed,
+  'Refrigerator': Refrigerator,
+  'Bed': Bed,
+  'PawPrint': PawPrint,
+  'Waves': Waves,
+  'Dumbbell': Dumbbell,
+  'Car': Car,
+  'ArrowUpCircle': ArrowUpCircle,
+  'Elevator': ArrowUpCircle,
+  'Thang máy': ArrowUpCircle,
+  'Hồ bơi': Waves,
+  'Bể bơi': Waves,
+  'Dịch vụ dọn dẹp': Droplets,
+  'Dọn dẹp': Droplets,
+  'Chỗ gửi xe': Car,
+  'Gửi xe': Car,
+  'An ninh': Shield,
+  'Bảo vệ': Shield,
+  'Nội thất': Home,
+  'Điều hòa': Wind,
+  'Tủ lạnh': Refrigerator,
+  'Bếp': UtensilsCrossed,
+  'Nhà bếp': UtensilsCrossed,
+  'Giặt ủi': Droplets,
+  'Ban công': Wind,
+  'Gym': Dumbbell,
+  'Sân vườn': Home,
+};
 
 export default function PropertyDetailsPage() {
   const { id } = useParams();
@@ -62,20 +105,24 @@ export default function PropertyDetailsPage() {
           bedrooms: data.bedrooms || 0,
           roomType: data.roomTypeName || 'Chưa xác định',
           area: data.areaM2 || 0,
-          allowPets: data.allowPets || false,
+          allowPets: data.allowPets || 'NO',
           availableFrom: t('property.available', 'Sẵn sàng'),
           images: data.images?.map((img: any) => img.imageUrl) || [],
           description: data.description || '',
           translations: data.translations || [],
-          amenities: [
-            { icon: Wifi, label: t('property.amenities_wifi', 'Wifi miễn phí') },
-            { icon: Wind, label: t('property.amenities_ac', 'Điều hòa') },
-            { icon: Droplets, label: t('property.amenities_heater', 'Nóng lạnh') },
-            { icon: Tv, label: t('property.amenities_tv', 'TV') },
-            { icon: UtensilsCrossed, label: t('property.amenities_kitchen', 'Bếp từ') },
-            { icon: Refrigerator, label: t('property.amenities_fridge', 'Tủ lạnh') },
-            ...(data.allowPets ? [{ icon: PawPrint, label: t('property.amenities_pets', 'Cho phép thú cưng') }] : []),
-          ],
+          amenitySet: data.amenitySet,
+          amenities: data.amenitySet?.values?.map((v: any) => {
+            // Priority for icon mapping: icon code > localized name > name code
+            const iconKey = v.icon || v.name || v.nameCode;
+            const Icon = IconMap[iconKey] || 
+                         IconMap[Object.keys(IconMap).find(key => key.toLowerCase() === iconKey?.toLowerCase()) || ""] || 
+                         Home;
+            
+            return {
+              icon: Icon,
+              label: `${v.name || v.nameCode}${v.type === 'BOOLEAN' ? '' : ': ' + v.value}`
+            };
+          }) || [],
           landlord: {
             name: data.hostName || 'Chủ nhà',
             phone: data.hostPhone || '0**********',
@@ -212,7 +259,11 @@ export default function PropertyDetailsPage() {
                     <PawPrint className="w-6 h-6 text-primary" />
                   </div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.petsAllowed', 'Thú cưng')}</p>
-                  <p className="text-sm font-bold text-gray-800">{property.allowPets ? t('property.allowed', 'Cho phép') : t('property.notAllowed', 'Không cho phép')}</p>
+                  <p className="text-sm font-bold text-gray-800 text-center">
+                    {property.allowPets === 'YES' && t('property.allowed', 'Cho phép')}
+                    {property.allowPets === 'NO' && t('property.notAllowed', 'Không cho phép')}
+                    {property.allowPets === 'FLEXIBLE' && t('property.flexible', 'Linh hoạt')}
+                  </p>
                 </div>
               </div>
 
@@ -275,14 +326,13 @@ export default function PropertyDetailsPage() {
 
                 {/* Host Info */}
                 <div className="mb-8 space-y-4">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">{t('property.hostInfo', 'Thông tin chủ nhà')}</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">{t('property.hostInfo', 'Thông tin liên hệ')}</p>
                   <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
                     <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-primary/20 shrink-0">
                       {property.landlord.name.charAt(0)}
                     </div>
                     <div className="min-w-0">
                       <p className="font-extrabold text-gray-900 truncate text-lg leading-tight">{property.landlord.name}</p>
-                      <p className="text-sm font-bold text-teal-600">{property.landlord.name === 'System Administrator' ? t('property.systemHost', 'Chủ sở hữu hệ thống') : t('property.systemHost', 'Chủ nhà')}</p>
                     </div>
                   </div>
                 </div>

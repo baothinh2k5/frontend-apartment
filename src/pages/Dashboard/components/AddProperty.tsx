@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Save, UploadCloud, X, GripVertical } from "lucide-react";
 import { propertyApi, lookupApi } from "../../../api/propertyApi";
+import { amenityApi, AmenitySet } from "../../../api/amenityApi";
 import { toast } from "sonner";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -19,7 +20,8 @@ const propertySchema = z.object({
   bedrooms: z.number().min(0, "Không được nhỏ hơn 0"),
   areaId: z.number(),
   roomTypeId: z.number(),
-  allowPets: z.boolean().optional(),
+  allowPets: z.enum(["YES", "NO", "FLEXIBLE"]),
+  amenitySetId: z.string().uuid("Vui lòng chọn bộ tiện ích").optional().nullable(),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -34,17 +36,20 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
   const [images, setImages] = useState<File[]>([]);
   const [areas, setAreas] = useState<{ id: number, name: string }[]>([]);
   const [roomTypes, setRoomTypes] = useState<{ id: number, name: string }[]>([]);
+  const [amenitySets, setAmenitySets] = useState<AmenitySet[]>([]);
   const [activeTab, setActiveTab] = useState<'vi' | 'en'>('vi');
 
   useEffect(() => {
     const fetchLookups = async () => {
       try {
-        const [areasRes, roomTypesRes] = await Promise.all([
+        const [areasRes, roomTypesRes, amenitySetsRes] = await Promise.all([
           lookupApi.getAreas(),
-          lookupApi.getRoomTypes()
+          lookupApi.getRoomTypes(),
+          amenityApi.getAmenitySets()
         ]);
         setAreas(areasRes as any);
         setRoomTypes(roomTypesRes as any);
+        setAmenitySets(amenitySetsRes);
       } catch (error) {
         console.error("Failed to fetch lookup data:", error);
       }
@@ -52,7 +57,7 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
     fetchLookups();
   }, []);
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<PropertyFormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       titleVI: "",
@@ -63,7 +68,8 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
       areaId: 1,      
       roomTypeId: 1,  
       bedrooms: 1,
-      allowPets: false,
+      allowPets: "NO",
+      amenitySetId: null,
     }
   });
 
@@ -97,7 +103,8 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
         bedrooms: initialData.bedrooms || 0,
         areaId: initialData.areaId || 1,
         roomTypeId: initialData.roomTypeId || 1,
-        allowPets: initialData.allowPets || false,
+        allowPets: initialData.allowPets || "NO",
+        amenitySetId: initialData.amenitySet?.id || null,
       });
     }
   }, [initialData, reset]);
@@ -355,16 +362,65 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
             />
           </div>
 
-          <div className="flex items-center gap-2 pt-8">
-            <input
-              type="checkbox"
-              id="allowPets"
-              {...register("allowPets")}
-              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-            />
-            <label htmlFor="allowPets" className="text-sm font-medium text-gray-700 cursor-pointer">
-              Cho phép mang theo thú cưng
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+              Quy định thú cưng <span className="text-rose-500">*</span>
             </label>
+            <select
+              {...register("allowPets")}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all bg-white"
+            >
+              <option value="YES">Cho phép (Allowed)</option>
+              <option value="NO">Không cho phép (Not Allowed)</option>
+              <option value="FLEXIBLE">Linh hoạt (Flexible)</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2 bg-teal-50/30 p-4 rounded-xl border border-teal-100">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                Trang thiết bị & Tiện ích <span className="text-rose-500">*</span>
+              </label>
+              <button 
+                type="button"
+                className="text-[11px] font-semibold text-teal-600 hover:text-teal-700 underline"
+                onClick={() => onPageChange("bo-tien-ich")}
+              >
+                + Tạo bộ tiện ích mới
+              </button>
+            </div>
+            <select
+              {...register("amenitySetId")}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all bg-white font-medium"
+            >
+              <option value="">-- Chọn bộ tiện ích --</option>
+              {amenitySets.map(set => (
+                <option key={set.id} value={set.id}>
+                  {set.isSystem ? "[Hệ thống] " : ""}{set.name} 
+                  ({set.values?.length || 0} tiện ích)
+                </option>
+              ))}
+            </select>
+            {errors.amenitySetId && <span className="text-[11px] text-rose-500 mt-1 block">{errors.amenitySetId.message as string}</span>}
+            
+            {(() => {
+              const selectedId = watch("amenitySetId");
+              if (!selectedId) return null;
+              const selectedSet = amenitySets.find(s => s.id === selectedId);
+              if (!selectedSet || !selectedSet.values) return null;
+
+              return (
+                <div className="mt-3 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  {selectedSet.values.map((v, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-3 py-1 bg-white border border-teal-200 rounded-full text-[12px] text-teal-700 shadow-sm">
+                       <span className="opacity-70">{v.icon}</span>
+                       <span className="font-semibold">{v.name}</span>
+                       <span className="text-gray-400">: {v.value}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="md:col-span-2 pt-2">

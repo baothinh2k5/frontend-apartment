@@ -8,6 +8,7 @@ import {
   FilePlus,
   Settings,
   Home,
+  Layers,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ const menuItems = [
   { id: "tat-ca-tin-dang", label: "Tất cả tin đăng", icon: FileText },
   { id: "tin-dang-cua-toi", label: "Tin đăng của tôi", icon: BookOpen },
   { id: "dang-tin-moi", label: "Đăng tin mới", icon: FilePlus },
+  { id: "bo-tien-ich", label: "Bộ tiện ích", icon: Layers },
   { id: "cai-dat", label: "Cài đặt", icon: Settings },
 ];
 
@@ -34,7 +36,7 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
     if (roleCode === "ADMIN") return true;
 
     // HOST only sees these
-    return ["tin-dang-cua-toi", "dang-tin-moi", "cai-dat"].includes(item.id);
+    return ["tin-dang-cua-toi", "dang-tin-moi", "bo-tien-ich", "cai-dat"].includes(item.id);
   });
 
   return (

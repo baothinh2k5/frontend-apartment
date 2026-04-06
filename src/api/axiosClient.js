@@ -13,7 +13,7 @@ const PUBLIC_ENDPOINTS = new Set(["/users/login", "/users/register"]);
 
 const axiosClient = axios.create({
   baseURL: normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL),
-  timeout: 10000,
+  timeout: 30000,
 });
 
 axiosClient.interceptors.request.use(

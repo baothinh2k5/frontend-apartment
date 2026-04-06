@@ -8,6 +8,7 @@ import { AddProperty } from "./components/AddProperty";
 import { AdminPropertyApproval } from "./components/AdminPropertyApproval";
 import { AdminAllProperties } from "./components/AdminAllProperties";
 import { AdminHostManagement } from "./components/AdminHostManagement";
+import { AmenitySetManager } from "./components/AmenitySetManager";
 import { Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
@@ -17,6 +18,7 @@ const pages: Record<string, { title: string; description: string }> = {
   "tat-ca-tin-dang": { title: "Tất Cả Tin Đăng", description: "Xem toàn bộ tin đăng bất động sản trên hệ thống." },
   "tin-dang-cua-toi": { title: "Tin Đăng Của Tôi", description: "Quản lý tin đăng cá nhân của bạn." },
   "dang-tin-moi": { title: "Đăng Tin Mới", description: "Tạo tin đăng bất động sản mới." },
+  "bo-tien-ich": { title: "Quản Lý Bộ Tiện Ích", description: "Tạo và quản lý các nhóm tiện ích để sử dụng khi đăng tin." },
   "cai-dat": { title: "Cài Đặt", description: "Quản lý cài đặt tài khoản và hệ thống." },
 };
 
@@ -29,7 +31,7 @@ export default function Dashboard() {
   const isHost = userRole === "HOST";
   const defaultPage = isAdmin ? "tong-quan" : "tin-dang-cua-toi";
   const requestedPage = searchParams.get("page");
-  const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
+  const allowedPages = ["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "bo-tien-ich", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"];
 
   const [activePage, setActivePage] = useState(
     requestedPage && allowedPages.includes(requestedPage) ? requestedPage : defaultPage
@@ -79,7 +81,8 @@ export default function Dashboard() {
           {activePage === "duyet-tin-dang" && <AdminPropertyApproval />}
           {activePage === "tat-ca-tin-dang" && <AdminAllProperties onEdit={handleEdit} />}
           {activePage === "quan-ly-host" && <AdminHostManagement />}
-          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"].includes(activePage) && (
+          {activePage === "bo-tien-ich" && <AmenitySetManager />}
+          {!["tong-quan", "tin-dang-cua-toi", "dang-tin-moi", "bo-tien-ich", "duyet-tin-dang", "tat-ca-tin-dang", "quan-ly-host"].includes(activePage) && (
             <PlaceholderPage
               title={pages[activePage]?.title || ""}
               description={pages[activePage]?.description}
