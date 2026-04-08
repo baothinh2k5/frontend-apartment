@@ -36,6 +36,9 @@ axiosClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
+    // DEBUG: Log Authorization header status
+    console.log(`>>> [AXIOS] Method: ${config.method?.toUpperCase()}, URL: ${config.url}, Auth Header: ${config.headers.Authorization ? "PRESENT" : "MISSING"}`);
+
     return config;
   },
   (error) => Promise.reject(error)

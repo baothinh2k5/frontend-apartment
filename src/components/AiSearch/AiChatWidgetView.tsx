@@ -8,16 +8,10 @@ const CHAT_STORAGE_KEY = 'leaselink_ai_chat';
 
 const initialMascotMessagesVi = [
   'Xin chào bạn! Mình là trợ lý AI của LeaseLink, sẵn sàng hỗ trợ tìm nhà theo nhu cầu của bạn.',
-  'Bạn chỉ cần mô tả tự nhiên như khu vực, giá, số phòng ngủ hay mong muốn riêng, mình sẽ gợi ý giúp bạn.',
-  'Mình có thể hỗ trợ tìm căn hộ, phòng trọ hoặc nơi ở gần biển, yên tĩnh, đầy đủ nội thất.',
-  'Thử nhắn như “Căn hộ 1 phòng ngủ ở Hải Châu, yên tĩnh” để mình tìm nhanh cho bạn nhé.',
 ];
 
 const initialMascotMessagesEn = [
   'Hello! I am LeaseLink AI assistant, ready to help you find a home.',
-  'Just describe your needs naturally like area, price, or specific wishes.',
-  'I can help you find an apartment, room, or a place near the beach.',
-  'Try typing “1 bedroom apartment in Hai Chau, quiet” and I will find it.',
 ];
 
 function AiPropertyCard({ property, onNavigate }: { property: Property; onNavigate: (propertyId: string) => void }) {

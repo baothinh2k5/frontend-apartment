@@ -18,6 +18,7 @@ const propertySchema = z.object({
   monthlyPrice: z.number().min(1000, "Giá không hợp lệ"),
   areaM2: z.number().min(1, "Diện tích phải lớn hơn 0"),
   bedrooms: z.number().min(0, "Không được nhỏ hơn 0"),
+  bathrooms: z.number().min(0, "Không được nhỏ hơn 0"),
   areaId: z.number(),
   roomTypeId: z.number(),
   allowPets: z.enum(["YES", "NO", "FLEXIBLE"]),
@@ -31,9 +32,16 @@ interface AddPropertyProps {
   initialData?: any;
 }
 
+type ImageItem = {
+  id?: string;
+  file?: File;
+  previewUrl: string;
+  isExisting: boolean;
+};
+
 export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
   const [saving, setSaving] = useState(false);
-  const [images, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [areas, setAreas] = useState<{ id: number, name: string }[]>([]);
   const [roomTypes, setRoomTypes] = useState<{ id: number, name: string }[]>([]);
   const [amenitySets, setAmenitySets] = useState<AmenitySet[]>([]);
@@ -68,6 +76,7 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
       areaId: 1,      
       roomTypeId: 1,  
       bedrooms: 1,
+      bathrooms: 1,
       allowPets: "NO",
       amenitySetId: null,
     }
@@ -101,28 +110,44 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
         monthlyPrice: initialData.monthlyPrice || 0,
         areaM2: initialData.areaM2 || 0,
         bedrooms: initialData.bedrooms || 0,
+        bathrooms: initialData.bathrooms || 0,
         areaId: initialData.areaId || 1,
         roomTypeId: initialData.roomTypeId || 1,
         allowPets: initialData.allowPets || "NO",
         amenitySetId: initialData.amenitySet?.id || null,
       });
+
+      // Load existing images into state
+      if (initialData.images && initialData.images.length > 0) {
+        setImages(initialData.images.map((img: any) => ({
+          id: img.id,
+          previewUrl: img.imageUrl,
+          isExisting: true
+        })));
+      }
     }
   }, [initialData, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArr = Array.from(e.target.files);
+      const newItems: ImageItem[] = filesArr.map(file => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        isExisting: false
+      }));
+
       setImages((prev) => {
-        // Filter out duplicates (same name and size)
-        const newFiles = filesArr.filter(file => 
-          !prev.some(p => p.name === file.name && p.size === file.size)
+        // Filter out duplicates (same name and size for new files)
+        const filteredNew = newItems.filter(newItem => 
+          !prev.some(p => p.file && p.file.name === newItem.file?.name && p.file.size === newItem.file?.size)
         );
-        return [...prev, ...newFiles];
+        return [...prev, ...filteredNew];
       });
     }
   };
 
-  const totalSizeMB = images.reduce((acc, img) => acc + img.size, 0) / (1024 * 1024);
+  const totalSizeMB = images.reduce((acc, img) => acc + (img.file?.size || 0), 0) / (1024 * 1024);
 
   const moveImage = (dragIndex: number, hoverIndex: number) => {
     const draggedImage = images[dragIndex];
@@ -136,8 +161,8 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
     setImages((prev) => {
       const newImages = [...prev];
       const removed = newImages.splice(index, 1)[0];
-      if (removed) {
-        URL.revokeObjectURL(URL.createObjectURL(removed));
+      if (removed && !removed.isExisting && removed.previewUrl) {
+        URL.revokeObjectURL(removed.previewUrl);
       }
       return newImages;
     });
@@ -154,26 +179,32 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
         translations.push({ languageCode: "en", title: data.titleEN, description: data.descriptionEN });
       }
 
-      // Ensure backend request matches expected data structure
+      // 1. Separate existing images and new files
+      const newFiles = images.filter(img => !img.isExisting && img.file).map(img => img.file as File);
+      const existingUrls = images.filter(img => img.isExisting).map(img => img.previewUrl);
+
+      // 2. Validate total file size (Max 20MB total for NEW files)
+      const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20MB
+      let totalNewSize = 0;
+      newFiles.forEach(file => { totalNewSize += file.size; });
+      
+      if (totalNewSize > MAX_TOTAL_SIZE) {
+        toast.error(`Tổng dung lượng file mới (${(totalNewSize / (1024 * 1024)).toFixed(2)}MB) vượt quá giới hạn cho phép (20MB).`);
+        return;
+      }
+
+      // 3. Build Metadata with existingImageUrls
       const metadata = JSON.stringify({
         ...data,
-        translations
+        translations,
+        existingImageUrls: existingUrls
       });
       const metadataBlob = new Blob([metadata], { type: "application/json" });
       formData.append("data", metadataBlob, "data.json");
 
-      // Validate total file size (Max 20MB total)
-      const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20MB
-      let totalSize = 0;
-      images.forEach(file => { totalSize += file.size; });
-      
-      if (totalSize > MAX_TOTAL_SIZE) {
-        toast.error(`Tổng dung lượng file (${(totalSize / (1024 * 1024)).toFixed(2)}MB) vượt quá giới hạn cho phép (20MB).`);
-        return;
-      }
-
-      if (images && images.length > 0) {
-        images.forEach((img) => formData.append("images", img));
+      // 4. Append new images
+      if (newFiles.length > 0) {
+        newFiles.forEach((file) => formData.append("images", file));
       }
 
       if (initialData?.id) {
@@ -364,6 +395,19 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+              Số phòng tắm <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              {...register("bathrooms", { valueAsNumber: true })}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all bg-white"
+              placeholder="1, 2..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
               Quy định thú cưng <span className="text-rose-500">*</span>
             </label>
             <select
@@ -499,7 +543,7 @@ export function AddProperty({ onPageChange, initialData }: AddPropertyProps) {
 }
 
 interface DraggableImageProps {
-  img: File;
+  img: ImageItem;
   index: number;
   moveImage: (dragIndex: number, hoverIndex: number) => void;
   removeImage: (index: number) => void;
@@ -524,7 +568,7 @@ function DraggableImage({ img, index, moveImage, removeImage }: DraggableImagePr
     },
   });
 
-  const previewUrl = URL.createObjectURL(img);
+  const previewUrl = img.previewUrl;
 
   return (
     <div
@@ -535,7 +579,7 @@ function DraggableImage({ img, index, moveImage, removeImage }: DraggableImagePr
       style={{ opacity: isDragging ? 0.4 : 1 }}
       className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden border-2 border-gray-100 group shadow-md bg-white cursor-move transition-all hover:border-teal-400 active:scale-95"
     >
-      {img.type.startsWith("video/") ? (
+      {img.file?.type?.startsWith("video/") || img.previewUrl?.toLowerCase().endsWith(".mp4") ? (
         <video src={previewUrl} className="w-full h-full object-cover" />
       ) : (
         <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
