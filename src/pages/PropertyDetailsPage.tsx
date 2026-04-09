@@ -103,6 +103,7 @@ export default function PropertyDetailsPage() {
           price: data.monthlyPrice,
           deposit: data.monthlyPrice,
           bedrooms: data.bedrooms || 0,
+          bathrooms: data.bathrooms || 0,
           roomType: data.roomTypeName || 'Chưa xác định',
           area: data.areaM2 || 0,
           allowPets: data.allowPets || 'NO',
@@ -253,6 +254,13 @@ export default function PropertyDetailsPage() {
                   </div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.bedrooms', 'Phòng ngủ')}</p>
                   <p className="text-lg font-bold text-gray-800">{property.bedrooms} {i18n.language?.startsWith('en') ? 'BD' : 'PN'}</p>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50/50 hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100 group">
+                  <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                    <Droplets className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{t('property.bathrooms', 'Phòng tắm')}</p>
+                  <p className="text-lg font-bold text-gray-800">{property.bathrooms} {i18n.language?.startsWith('en') ? 'BA' : 'PT'}</p>
                 </div>
                 <div className="flex flex-col items-center p-4 rounded-xl bg-gray-50/50 hover:bg-teal-50/50 transition-colors border border-transparent hover:border-teal-100 group">
                   <div className="p-3 bg-white rounded-xl shadow-sm mb-3 group-hover:scale-110 transition-transform">

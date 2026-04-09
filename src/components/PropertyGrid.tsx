@@ -67,7 +67,7 @@ export function PropertyGrid() {
           priceValue: p.monthlyPrice,
           location: p.areaName ? `${p.addressLine}, ${p.areaName}` : p.addressLine,
           beds: p.bedrooms || 0,
-          baths: 1, // Defaulting to 1 as not in DTO yet
+          baths: p.bathrooms || 1, 
           area: p.areaM2 || 0,
           rating: 4.8,
           reviewCount: Math.floor(Math.random() * 50) + 10,

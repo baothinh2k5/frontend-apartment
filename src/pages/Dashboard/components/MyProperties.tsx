@@ -339,6 +339,7 @@ export function MyProperties({ onPageChange, onEdit }: MyPropertiesProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <StatItem label="Diện tích" value={`${viewProperty.areaM2} m²`} />
                     <StatItem label="Phòng ngủ" value={viewProperty.bedrooms} />
+                    <StatItem label="Phòng tắm" value={viewProperty.bathrooms} />
                     <StatItem label="Loại phòng" value={viewProperty.roomTypeName} />
                     <StatItem label="Thú cưng" value={viewProperty.allowPets ? "Có" : "Không"} />
                   </div>
