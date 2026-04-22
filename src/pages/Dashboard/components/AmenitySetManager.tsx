@@ -1,24 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Save, X, Info, Check, Shield, Wifi, Wind, Droplets, Tv, UtensilsCrossed, Refrigerator, Bed, PawPrint, Waves, Dumbbell, Car, ArrowUpCircle, Home, Edit3 } from "lucide-react";
+import { Plus, Trash2, Save, X, Info, Check, Shield, Edit3 } from "lucide-react";
+import { getAmenityIcon } from "../../../utils/amenityIcons";
 import { amenityApi, Amenity, AmenitySet } from "../../../api/amenityApi";
 import { toast } from "sonner";
 
-const IconMap: Record<string, any> = {
-  'wifi': Wifi,
-  'ac_unit': Wind,
-  'cleaning_services': Trash2,
-  'tv': Tv,
-  'bed': Bed,
-  'pool': Waves,
-  'fitness_center': Dumbbell,
-  'local_parking': Car,
-  'elevator': ArrowUpCircle,
-  'Wifi': Wifi,
-  'Wind': Wind,
-  'Tv': Tv,
-  'Bed': Bed,
-  'Car': Car,
-};
 
 export function AmenitySetManager() {
   const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -182,7 +167,7 @@ export function AmenitySetManager() {
                         <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Chọn các tiện ích đi kèm</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {amenities.map(amenity => {
-                                const Icon = IconMap[amenity.icon] || Home;
+                                const Icon = getAmenityIcon(amenity.icon);
                                 const isSelected = selectedValues.hasOwnProperty(amenity.id);
                                 return (
                                     <div 
@@ -256,7 +241,7 @@ export function AmenitySetManager() {
 
                     <div className="flex-1 space-y-2 overflow-y-auto max-h-[150px] pr-2 scrollbar-thin">
                         {set.values?.map((v, idx) => {
-                            const Icon = IconMap[v.icon] || Home;
+                            const Icon = getAmenityIcon(v.icon);
                             return (
                                 <div key={idx} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl group-hover:bg-teal-50/30 transition-colors">
                                     <div className="flex items-center gap-3">

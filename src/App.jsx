@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Navigation } from './components/Navigation';
 import { MapSection } from './components/MapSection';
 import { PropertyGrid } from './components/PropertyGrid';
-import { AiChatWidgetView } from './components/AiSearch/AiChatWidgetView';
 import { Footer } from './components/Footer';
 import { SearchProvider } from './context/SearchContext';
 import { Loader2 } from 'lucide-react';
@@ -34,7 +33,6 @@ function Home() {
         <MapSection />
         <PropertyGrid />
       </div>
-      {/* <AiChatWidgetView /> */}
     </SearchProvider>
   );
 }

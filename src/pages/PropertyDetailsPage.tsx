@@ -31,8 +31,8 @@ import {
 } from 'lucide-react';
 import { PropertyGallery } from '../components/PropertyDetail/PropertyGallery';
 import { PropertyMapVietnamese } from '../components/PropertyDetail/PropertyMapVietnamese';
+import { Footer } from './components/Footer';
 import { PropertyCard } from '../components/PropertyCard';
-import { AiChatWidgetView } from '../components/AiSearch/AiChatWidgetView';
 import { propertyApi } from '../api/propertyApi';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -112,7 +112,10 @@ export default function PropertyDetailsPage() {
           description: data.description || '',
           translations: data.translations || [],
           amenitySet: data.amenitySet,
-          amenities: data.amenitySet?.values?.map((v: any) => {
+          amenities: [
+            ...(data.amenitySet?.values || []),
+            ...(data.customAmenities || [])
+          ].map((v: any) => {
             // Priority for icon mapping: icon code > localized name > name code
             const iconKey = v.icon || v.name || v.nameCode;
             const Icon = IconMap[iconKey] || 
@@ -123,7 +126,7 @@ export default function PropertyDetailsPage() {
               icon: Icon,
               label: `${v.name || v.nameCode}${v.type === 'BOOLEAN' ? '' : ': ' + v.value}`
             };
-          }) || [],
+          }),
           landlord: {
             name: data.hostName || 'Chủ nhà',
             phone: data.hostPhone || '0**********',
@@ -395,7 +398,6 @@ export default function PropertyDetailsPage() {
       </main>
 
       {/* Chatbot */}
-      <AiChatWidgetView />
     </div>
   );
 }

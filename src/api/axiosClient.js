@@ -125,6 +125,8 @@ axiosClient.interceptors.response.use(
         isRefreshing = false;
         processQueue(null, accessToken);
 
+        // Retry the original request with the new token
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
         return axiosClient(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;

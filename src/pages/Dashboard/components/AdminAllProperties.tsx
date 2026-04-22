@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { Check, X, Eye, Edit, Trash2, Filter, MessageSquare, Plus, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, X, Eye, Edit, Trash2, Filter, MessageSquare, Plus, Shield, Star, StickyNote } from "lucide-react";
 import { propertyApi } from "../../../api/propertyApi";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../../../utils/langUtils";
+import { toast } from "sonner";
 
 interface Property {
   id: string;
@@ -17,6 +18,8 @@ interface Property {
   bedrooms: number;
   allowPets: boolean;
   status: string;
+  isFeatured: boolean;
+  internalNotes: string;
   createdAt: string;
   rejectedReason?: string;
   hostPhone?: string;
@@ -42,6 +45,8 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [noteModal, setNoteModal] = useState<{ id: string, notes: string } | null>(null);
+  const [savingNote, setSavingNote] = useState(false);
 
   const fetchAll = async () => {
     try {
@@ -137,7 +142,33 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
       fetchAll();
     } catch (err) {
       console.error(err);
-      alert("Duyệt tin thất bại.");
+    }
+  };
+
+  const handleToggleFeatured = async (id: string) => {
+    try {
+      await propertyApi.toggleFeatured(id);
+      setProperties(prev => prev.map(p => p.id === id ? { ...p, isFeatured: !p.isFeatured } : p));
+      toast.success("Đã cập nhật trạng thái nổi bật");
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể cập nhật trạng thái");
+    }
+  };
+
+  const handleUpdateNotes = async () => {
+    if (!noteModal) return;
+    try {
+      setSavingNote(true);
+      await propertyApi.updateInternalNotes(noteModal.id, noteModal.notes);
+      setProperties(prev => prev.map(p => p.id === noteModal.id ? { ...p, internalNotes: noteModal.notes } : p));
+      setNoteModal(null);
+      toast.success("Đã lưu ghi chú");
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể lưu ghi chú");
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -208,8 +239,9 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
               ) : (
                 properties.map((p) => {
                   const isHidden = p.status === "HIDDEN";
+                  const isFeatured = p.isFeatured;
                   return (
-                    <tr key={p.id} className={`hover:bg-gray-50/50 transition-colors group ${selectedIds.has(p.id) ? 'bg-teal-50/30' : ''}`}>
+                    <tr key={p.id} className={`hover:bg-gray-50/50 transition-colors group ${selectedIds.has(p.id) ? 'bg-teal-50/30' : ''} ${isFeatured ? 'bg-amber-50/40 border-l-4 border-l-amber-400' : ''}`}>
                       <td className="px-6 py-4">
                         <input 
                           type="checkbox" 
@@ -230,6 +262,7 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                           <div>
                             <div className={`font-bold text-gray-900 line-clamp-1 ${isHidden ? 'opacity-50 italic' : ''}`}>
                               {getLocalizedText(p.translations, 'title', i18n.language) || p.title}
+                              {isFeatured && <Star className="inline-block ml-2 w-3 h-3 fill-amber-400 text-amber-500" />}
                             </div>
                             <div className="text-[11px] text-gray-500 line-clamp-1">{p.addressLine}</div>
                           </div>
@@ -256,6 +289,20 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleToggleFeatured(p.id)}
+                            className={`p-1.5 rounded-lg transition-all ${isFeatured ? 'text-amber-500 bg-amber-100/50 hover:bg-amber-100' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                            title={isFeatured ? "Bỏ nổi bật" : "Đánh dấu nổi bật"}
+                          >
+                            <Star className={`w-4 h-4 ${isFeatured ? 'fill-current' : ''}`} />
+                          </button>
+                          <button
+                            onClick={() => setNoteModal({ id: p.id, notes: p.internalNotes || "" })}
+                            className="p-1.5 hover:bg-teal-50 text-gray-400 hover:text-teal-600 rounded-lg transition-all"
+                            title="Ghi chú nội bộ"
+                          >
+                            <StickyNote className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => setViewProperty(p)}
                             className="p-1.5 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-all" title="Xem nhanh">
@@ -455,6 +502,39 @@ export const AdminAllProperties = ({ onEdit }: AdminAllPropertiesProps) => {
                 className="px-6 py-3 bg-white border border-rose-500 text-rose-500 rounded-xl font-bold hover:bg-rose-50 transition-all active:scale-95">
                 <Trash2 className="w-5 h-5" />
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Quick Note Modal */}
+      {noteModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <StickyNote className="w-5 h-5 text-teal-600" />
+                Ghi chú nội bộ
+              </h3>
+              <button onClick={() => setNoteModal(null)} className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"><X size={18} /></button>
+            </div>
+            <div className="p-5">
+              <textarea
+                className="w-full h-32 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all placeholder:text-gray-300 resize-none"
+                placeholder="Ghi chú quan trọng về khách hàng, trạng thái phòng, hoặc lưu ý bảo trì..."
+                value={noteModal.notes}
+                onChange={(e) => setNoteModal({ ...noteModal, notes: e.target.value })}
+              />
+              <div className="mt-4 flex gap-3">
+                <button
+                  disabled={savingNote}
+                  onClick={handleUpdateNotes}
+                  className="flex-1 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  {savingNote ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Check size={18} />}
+                  Lưu Ghi Chú
+                </button>
+                <button onClick={() => setNoteModal(null)} className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all">Đóng</button>
+              </div>
             </div>
           </div>
         </div>

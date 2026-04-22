@@ -64,6 +64,14 @@ export const propertyApi = {
 
   toggleHide: async (id: string) => {
     return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/${id}/toggle-hide`);
+  },
+
+  toggleFeatured: async (id: string) => {
+    return axiosClient.post(`${PROPERTY_ENDPOINTS.base}/${id}/toggle-featured`);
+  },
+
+  updateInternalNotes: async (id: string, notes: string) => {
+    return axiosClient.patch(`${PROPERTY_ENDPOINTS.base}/${id}/internal-notes`, { notes });
   }
 };
 
