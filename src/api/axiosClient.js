@@ -78,62 +78,13 @@ axiosClient.interceptors.response.use(
     const requestPath = originalRequest?.url ?? "";
     const isPublicEndpoint = Array.from(PUBLIC_ENDPOINTS).some(endpoint => requestPath.includes(endpoint));
 
+    // Nếu gặp lỗi 401 (Unauthorized) và không phải endpoint public
     if (status === 401 && !isPublicEndpoint) {
-      if (isLoggingOut) return Promise.reject(error);
-
-      // Neu da retry roi ma van 401 -> Logout luon, tranh loop
-      if (originalRequest._retry) {
-        handleLogout();
-        return Promise.reject(error);
-      }
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest._retry = true; // Danh dau da retry de khong refresh lai lan nua
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return axiosClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        isRefreshing = false;
-        handleLogout();
-        return Promise.reject(error);
-      }
-
-      try {
-        const response = await axios.post(
-          `${normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL)}/users/refresh-token`,
-          { refreshToken }
-        );
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", newRefreshToken);
-
-        isRefreshing = false;
-        processQueue(null, accessToken);
-
-        // Retry the original request with the new token
-        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
-        return axiosClient(originalRequest);
-      } catch (refreshError) {
-        isRefreshing = false;
-        processQueue(refreshError, null);
-        handleLogout();
-        return Promise.reject(refreshError);
-      }
+      // Lập tức xử lý đăng xuất
+      handleLogout();
+      
+      // Bắt buộc return Promise.reject(error) để component bắt được lỗi ngay lập tức, tránh treo timeout
+      return Promise.reject(error);
     }
 
     console.error("Loi tu Server:", error.response?.data || error.message);
